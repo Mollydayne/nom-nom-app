@@ -1,12 +1,51 @@
-# React + Vite
+# 🍱 NomNom App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Bienvenue dans **NomNom**, l'application qui révolutionne la gestion des livraions de repas dans des contenants consignés !
 
-Currently, two official plugins are available:
+Conçue avec amour pour simplifier la vie des chefs privés et traiteurs passionnés, NomNom aide à suivre les commandes, les paiements et les retours de contenants avec efficacité et simplicité.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![Aperçu de l'application NomNom](images/NomNom1.png)
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🚀 À propos
+
+NomNom est née d'un besoin simple : gérer facilement la vente de gamelles en gardant une trace claire des commandes, des paiements et des retours de contenants.
+Fini les oublis et les pertes de boîtes ! Grâce à cette application, tu peux :
+
+- 📦 Suivre les commandes et les livraisons
+- 💰 Gérer les paiements en attente et les encaissements
+- 🔄 Suivre les retours de contenants
+- 📝 Noter les préférences alimentaires de tes clients
+
+---
+
+## 🎯 Fonctionnalités principales
+
+- **QR Code magique** : Génère un QR code unique pour chaque commande, à coller sur les gamelles. Scanne-le lors de la livraison et du retour des contenants pour un suivi sans faille.
+- **Suivi des paiements** : Calcule automatiquement le montant dû par chaque client. Enregistre les paiements partiels ou complets en un clin d'œil.
+- **Fiche client détaillée** : Nom, nombre total de gamelles commandées, contenants en possession, solde dû, préférences alimentaires... tout est là !
+- **Historique des commandes** : Garde une trace de toutes les livraisons passées pour une meilleure organisation.
+
+---
+
+## 🛠️ Technologies utilisées
+
+- **Frontend** : React + Tailwind pour une interface rapide et réactive
+- **Backend** : Express JS pour la logique métier et les routes API
+- **Base de données** : SQLite pour stocker les informations clients et commandes
+
+
+---
+
+## 📦 Installation
+
+1. **Clone le dépôt** :
+
+   ```bash
+   git clone https://github.com/Mollydayne/nom-nom-app.git
+   cd nom-nom-app
+
+
+
