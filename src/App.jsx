@@ -58,13 +58,17 @@ function App() {
           onChange={handleChange}
           className="mb-6 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] placeholder:text-[#5a3a00] outline-none w-full"
         />
-        <button
-          type="submit"
-          className="flex items-center justify-between gap-4 px-6 py-2 bg-[#f85e00] text-white font-medium rounded-full w-full hover:bg-[#d24a00] transition"
-        >
-          Sign Up
-          <span className="w-6 h-6 rounded-full bg-[#918450] inline-block"></span>
+
+        
+       <button
+  type="submit"
+  className="relative w-40 sm:w-48 md:w-56 px-6 py-2 bg-[#f85e00] text-white font-medium rounded-full hover:bg-[#d24a00] transition text-center"
+>
+  Sign Up
+  <span className="absolute right-4 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[#918450]"></span>
         </button>
+
+
       </form>
 
       <p className="mt-6 text-[#5a3a00] text-lg">
