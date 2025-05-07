@@ -1,3 +1,4 @@
+require('dotenv').config(); // JWT
 const express = require('express');
 const cors = require('cors');
 
@@ -9,11 +10,11 @@ app.use(express.json());
 
 // Test route
 app.get('/api/ping', (req, res) => {
-  res.json({ message: 'Pong depuis le backend 🍱' });
+  res.json({ message: 'Pong depuis le backend ' });
 });
 
 app.listen(PORT, () => {
-  console.log(`🚀 NomNom backend is running on http://localhost:${PORT}`);
+  console.log(` NomNom backend is running on http://localhost:${PORT}`);
 });
 
 const userRoutes = require('./routes/userRoutes');
