@@ -1,5 +1,5 @@
 // require('dotenv').config(); // JWT
-require('dotenv').config({ path: __dirname + '/.env' }); // Changin cause not workin
+require('dotenv').config({ path: __dirname + '/.env' }); // 07/05/25 : Test de changement de .env car le précédent ne fonctionnait pas
 
 const express = require('express');
 const cors = require('cors');
@@ -21,3 +21,7 @@ app.listen(PORT, () => {
 
 const userRoutes = require('./routes/userRoutes');
 app.use('/api/users', userRoutes);
+
+const clientRoutes = require('./routes/clientRoutes');
+app.use('/api/clients', clientRoutes);
+

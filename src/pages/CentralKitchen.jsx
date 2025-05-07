@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 function CentralKitchen() {
@@ -6,11 +6,22 @@ function CentralKitchen() {
   const user = JSON.parse(localStorage.getItem('user'));
   const token = localStorage.getItem('token');
 
+  const [clients, setClients] = useState([]);
+  const [selectedClientId, setSelectedClientId] = useState('');
+
   useEffect(() => {
     if (!token || !user) {
       navigate('/login');
     }
   }, [token, user, navigate]);
+
+  // Charger les clients depuis l'API
+  useEffect(() => {
+    fetch('http://localhost:3001/api/clients')
+      .then((res) => res.json())
+      .then((data) => setClients(data))
+      .catch((err) => console.error('Erreur chargement clients :', err));
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -28,22 +39,48 @@ function CentralKitchen() {
         Log out
       </button>
 
-      <h1 className="text-6xl mb-10 tracking-tight">Central<br />Kitchen</h1>
-
+      <h1 className="text-6xl mb-4 tracking-tight">Central<br />Kitchen</h1>
       <h2 className="text-xl italic mb-6 text-[#5a3a00]">
-  Hello, <span className="font-bold text-[#891c1c]">{user?.username}</span> — ready to cook?
-</h2>
+        Hello, <span className="font-bold text-[#891c1c]">{user?.username}</span> — ready to cook?
+      </h2>
 
-
-      {/* Placeholder pour ton interface */}
+      {/* Interface */}
       <div className="grid grid-cols-2 gap-6">
-        {/* Exemple : boutons ou composants plus tard */}
+        {/* Bloc Select name */}
         <div className="flex flex-col items-center">
-          <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">Select name</div>
-          <button className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition">
+          <label htmlFor="client-select" className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">
+            Select name
+          </label>
+          <select
+            id="client-select"
+            value={selectedClientId}
+            onChange={(e) => setSelectedClientId(e.target.value)}
+            className="mb-2 px-4 py-1 rounded-full bg-white text-[#5a3a00] outline-none text-center"
+          >
+            <option value="">-- Choose a client --</option>
+            {clients.map((client) => (
+              <option key={client.id} value={client.id}>
+                {client.name}
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={() => {
+              if (selectedClientId) navigate(`/clients/${selectedClientId}`);
+            }}
+            disabled={!selectedClientId}
+            className={`px-6 py-1.5 rounded-full text-white transition ${
+              selectedClientId
+                ? 'bg-[#f85e00] hover:bg-[#d24a00]'
+                : 'bg-[#cccccc] cursor-not-allowed'
+            }`}
+          >
             View profile
           </button>
         </div>
+
+        {/* Autres boutons */}
         <div className="flex flex-col items-center">
           <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">Parameters</div>
           <button className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition">
@@ -56,12 +93,15 @@ function CentralKitchen() {
             See
           </button>
         </div>
+
+
         <div className="flex flex-col items-center">
           <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">Add a client</div>
-          <button className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition">
+           <button onClick={() => navigate('/add-client')} className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition">
             Yeah
           </button>
         </div>
+
       </div>
     </div>
   );
