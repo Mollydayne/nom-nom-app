@@ -1,4 +1,6 @@
-require('dotenv').config(); // JWT
+// require('dotenv').config(); // JWT
+require('dotenv').config({ path: __dirname + '/.env' }); // Changin cause not workin
+
 const express = require('express');
 const cors = require('cors');
 

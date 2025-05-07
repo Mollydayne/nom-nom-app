@@ -10,12 +10,14 @@ router.post('/register', async (req, res) => {
   if (!username || !email || !password)
     return res.status(400).json({ error: 'Missing fields' });
 
+  const normalizedEmail = email.toLowerCase();
+
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     db.run(
       `INSERT INTO users (username, email, password) VALUES (?, ?, ?)`,
-      [username, email, hashedPassword],
+      [username, normalizedEmail, hashedPassword],
       function (err) {
         if (err) return res.status(500).json({ error: err.message });
 
@@ -33,16 +35,22 @@ router.post('/register', async (req, res) => {
 // Route de connexion
 router.post('/login', (req, res) => {
   const { email, password } = req.body;
-
   if (!email || !password)
     return res.status(400).json({ error: 'Email and password are required' });
 
-  db.get(`SELECT * FROM users WHERE email = ?`, [email], async (err, user) => {
+  const normalizedEmail = email.toLowerCase();
+
+  db.get(`SELECT * FROM users WHERE email = ?`, [normalizedEmail], async (err, user) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     try {
+      console.log('Mot de passe reçu :', password);
+      console.log('Mot de passe en base :', user.password);
+
       const match = await bcrypt.compare(password, user.password);
+      console.log('Résultat comparaison :', match);
+
       if (!match) return res.status(401).json({ error: 'Invalid password' });
 
       const token = jwt.sign(

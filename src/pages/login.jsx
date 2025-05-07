@@ -13,23 +13,31 @@ function Login() {
     setError('');
 
     try {
+      console.log('Tentative de login avec :', form);
+
       const res = await fetch('http://localhost:3001/api/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          email: form.email.toLowerCase(), // normalise ici aussi
+        }),
       });
 
       const data = await res.json();
+      console.log('Réponse backend :', data);
 
       if (!res.ok) throw new Error(data.error || 'Login failed');
 
-      // Sauvegarde le token et l'utilisateur en localStorage
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
 
+      console.log('Token sauvegardé :', data.token);
       alert('Connexion réussie 🍱');
-      window.location.href = '/central-kitchen'; // redirection après login
+
+      window.location.href = '/central-kitchen';
     } catch (err) {
+      console.error('Erreur login :', err);
       setError(err.message);
     }
   };
