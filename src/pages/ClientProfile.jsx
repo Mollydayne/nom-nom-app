@@ -19,7 +19,7 @@ function ClientProfile() {
   if (!client) return <p className="text-center mt-10">Loading client profile...</p>;
 
   return (
-    <div className="min-h-screen bg-[#ffd29d] flex flex-col items-center justify-center font-zenloop px-4 text-[#5a3a00]">
+    <div className="min-h-screen bg-[#ffb563] flex flex-col items-center justify-center font-zenloop px-4 text-[#5a3a00]">
       <h1 className="text-4xl text-[#891c1c] mb-6">Profile: {client.name}</h1>
 
       <div className="bg-[#ffe4b3] rounded-xl p-6 w-full max-w-md shadow-lg space-y-4 text-lg">

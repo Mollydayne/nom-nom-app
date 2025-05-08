@@ -30,7 +30,22 @@ function CentralKitchen() {
   };
 
   return (
-    <div className="min-h-screen bg-[#ffd29d] relative font-zenloop px-4 flex flex-col items-center justify-center text-[#891c1c]">
+    // Le parent est positionné en relative pour que l'image en absolute fonctionne
+    <div className="min-h-screen bg-[#ffb563] relative font-zenloop px-4 flex flex-col items-center justify-center text-[#891c1c]">
+
+      {/* Image bento en haut à gauche */}
+     <img
+  src="/bento.png"
+  alt="Bento decoration"
+  className="absolute pointer-events-none select-none opacity-30 animate-fade-in
+             top-[-30px] left-[-30px] 
+             sm:top-[-40px] sm:left-[-40px] 
+             md:top-[-60px] md:left-[-60px] 
+             lg:top-0 lg:left-0
+             max-w-[70vw] sm:max-w-[75vw] md:max-w-[80vw] lg:max-w-[865px] 
+             w-auto h-auto max-h-[70vh]"
+/>
+
       {/* Bouton Log out en haut à droite */}
       <button
         onClick={handleLogout}
@@ -39,23 +54,23 @@ function CentralKitchen() {
         Log out
       </button>
 
+      {/* Titre principal */}
       <h1 className="text-6xl mb-4 tracking-tight">Central<br />Kitchen</h1>
+
+      {/* Sous-titre avec nom de l'utilisateur */}
       <h2 className="text-xl italic mb-6 text-[#5a3a00]">
         Hello, <span className="font-bold text-[#891c1c]">{user?.username}</span> — ready to cook?
       </h2>
 
-      {/* Interface */}
+      {/* Interface utilisateur */}
       <div className="grid grid-cols-2 gap-6">
-        {/* Bloc Select name */}
+        {/* Sélection de client */}
         <div className="flex flex-col items-center">
-          <label htmlFor="client-select" className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">
-            Select name
-          </label>
           <select
             id="client-select"
             value={selectedClientId}
             onChange={(e) => setSelectedClientId(e.target.value)}
-            className="mb-2 px-4 py-1 rounded-full bg-white text-[#5a3a00] outline-none text-center"
+            className="mb-2 px-4 py-1 rounded-full bg-[#ffe4b3] text-[#5a3a00] outline-none text-center"
           >
             <option value="">-- Choose a client --</option>
             {clients.map((client) => (
@@ -73,20 +88,22 @@ function CentralKitchen() {
             className={`px-6 py-1.5 rounded-full text-white transition ${
               selectedClientId
                 ? 'bg-[#f85e00] hover:bg-[#d24a00]'
-                : 'bg-[#cccccc] cursor-not-allowed'
+                : 'bg-[#f85e00] cursor-not-allowed'
             }`}
           >
             View profile
           </button>
         </div>
 
-        {/* Autres boutons */}
+        {/* Paramètres */}
         <div className="flex flex-col items-center">
           <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">Parameters</div>
           <button className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition">
             Go !
           </button>
         </div>
+
+        {/* Inventaire des gamelles */}
         <div className="flex flex-col items-center">
           <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">Box Inventory</div>
           <button className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition">
@@ -94,14 +111,16 @@ function CentralKitchen() {
           </button>
         </div>
 
-
+        {/* Ajouter un client */}
         <div className="flex flex-col items-center">
           <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">Add a client</div>
-           <button onClick={() => navigate('/add-client')} className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition">
+          <button
+            onClick={() => navigate('/add-client')}
+            className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition"
+          >
             Yeah
           </button>
         </div>
-
       </div>
     </div>
   );
