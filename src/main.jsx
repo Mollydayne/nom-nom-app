@@ -11,6 +11,9 @@ import Login from './pages/login.jsx';
 import CentralKitchen from './pages/CentralKitchen.jsx';
 import ClientProfile from './pages/ClientProfile.jsx';
 import AddClient from './pages/AddClient.jsx';
+import EditClient from './pages/EditClient.jsx';
+import ProtectedRoute from './components/ProtectedRoute';
+
 
 
 // Import du fichier css
@@ -28,6 +31,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/central-kitchen" element={<CentralKitchen />} />
         <Route path="/clients/:id" element={<ClientProfile />} />
         <Route path="/add-client" element={<AddClient />} />
+        <Route path="/edit-client/:id" element={<EditClient />} />
+
 
       </Routes>
     </BrowserRouter>

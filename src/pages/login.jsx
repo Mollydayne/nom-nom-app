@@ -1,75 +1,111 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import BentoDecoration from '../components/BentoDecoration';
+import Toast from '../components/Toast';
 
 function Login() {
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+  });
 
+  const [error, setError] = useState('');
+  const [showRedirectToast, setShowRedirectToast] = useState(false);
+  const navigate = useNavigate();
+
+  // Affiche un toast si l'utilisateur a été redirigé depuis une route protégée
+  useEffect(() => {
+    const reason = localStorage.getItem('redirectReason');
+    if (reason === 'unauthorized') {
+      setShowRedirectToast(true);
+      localStorage.removeItem('redirectReason');
+      setTimeout(() => setShowRedirectToast(false), 3000);
+    }
+  }, []);
+
+  // Met à jour les champs du formulaire à chaque saisie
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleLogin = async (e) => {
+  // Envoie le formulaire au backend pour authentification
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
 
-    try {
-      console.log('Tentative de login avec :', form);
+    const res = await fetch('http://localhost:3001/api/users/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    });
 
-      const res = await fetch('http://localhost:3001/api/users/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          email: form.email.toLowerCase(), // normalise ici aussi
-        }),
-      });
+    const data = await res.json();
 
-      const data = await res.json();
-      console.log('Réponse backend :', data);
-
-      if (!res.ok) throw new Error(data.error || 'Login failed');
-
+    if (res.ok) {
+      // Sauvegarde le token et les infos utilisateur
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-
-      console.log('Token sauvegardé :', data.token);
-      alert('Connexion réussie 🍱');
-
-      window.location.href = '/central-kitchen';
-    } catch (err) {
-      console.error('Erreur login :', err);
-      setError(err.message);
+      navigate('/central-kitchen');
+    } else {
+      setError(data.error || 'Erreur de connexion');
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#ffd29d] flex flex-col items-center justify-center font-zenloop px-4">
-      <h1 className="text-4xl text-[#891c1c] mb-6">Log In</h1>
-      <form onSubmit={handleLogin} className="flex flex-col w-full max-w-sm">
+    <div className="min-h-screen bg-[#ffb563] flex flex-col items-center justify-center font-zenloop px-4 relative text-[#5a3a00]">
+      {/* Image décorative en haut à gauche */}
+      <BentoDecoration />
+
+      {/* Titre de la page */}
+      <h1 className="text-5xl sm:text-6xl md:text-7xl text-[#891c1c] mb-8 leading-none">
+        Welcome back !
+      </h1>
+
+      {/* Formulaire de connexion */}
+      <form onSubmit={handleSubmit} className="flex flex-col items-center w-full max-w-sm">
         <input
           type="email"
           name="email"
           placeholder="Email"
           value={form.email}
           onChange={handleChange}
-          className="mb-4 px-6 py-2 rounded-full bg-white text-[#5a3a00] placeholder:text-[#5a3a00] text-center outline-none w-full"
+          className="mb-4 px-6 py-2 rounded-full bg-[#ffe4b3] text-black text-center outline-none w-full focus:bg-[#ffeecd] hover:bg-[#ffeecd] transition"
         />
         <input
           type="password"
           name="password"
-          placeholder="Password"
+          placeholder="Mot de passe"
           value={form.password}
           onChange={handleChange}
-          className="mb-4 px-6 py-2 rounded-full bg-white text-[#5a3a00] placeholder:text-[#5a3a00] text-center outline-none w-full"
+          className="mb-6 px-6 py-2 rounded-full bg-[#ffe4b3] text-black text-center outline-none w-full focus:bg-[#ffeecd] hover:bg-[#ffeecd] transition"
         />
+
         <button
           type="submit"
-          className="px-6 py-2 bg-[#f85e00] text-white rounded-full hover:bg-[#d24a00] transition"
+          className="w-40 sm:w-48 md:w-56 px-6 py-2 bg-[#f85e00] text-white font-medium rounded-full hover:bg-[#d24a00] transition text-center"
         >
-          Log In
+          Log in
         </button>
+
+        {/* Message d'erreur si authentification échouée */}
+        {error && <p className="mt-4 text-red-700">{error}</p>}
       </form>
-      {error && <p className="mt-4 text-red-700">{error}</p>}
+
+      {/* Lien vers la page d'inscription */}
+      <p className="mt-6 text-[#5a3a00] text-lg">
+        Pas encore de compte dans notre fantastique app ?
+        <Link to="/" className="hover:text-[#891c1c] transition ml-1">
+          Sign up !
+        </Link>
+      </p>
+
+      {/* Toast d'alerte si redirection depuis une route protégée */}
+      {showRedirectToast && (
+        <Toast
+          message="Il faut être authentifié pour pouvoir accéder à cette page !"
+          duration={3000}
+          onClose={() => setShowRedirectToast(false)}
+        />
+      )}
     </div>
   );
 }
