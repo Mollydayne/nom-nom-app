@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import LogoutBadge from '../components/LogoutBadge';
 
 function CentralKitchen() {
   const navigate = useNavigate();
@@ -28,21 +29,12 @@ function CentralKitchen() {
   useEffect(() => {
     fetchClients();
 
-    //  Recharge les clients quand l'utilisateur revient sur l'onglet (ex : après ajout)
+    // Recharge les clients quand l'utilisateur revient sur l'onglet
     window.addEventListener('focus', fetchClients);
-
-    // Nettoyage pour éviter les doublons d'écouteur
     return () => {
       window.removeEventListener('focus', fetchClients);
     };
   }, []);
-
-  //  Déconnexion
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
 
   return (
     <div className="min-h-screen bg-[#ffb563] relative font-zenloop px-4 flex flex-col items-center justify-center text-[#891c1c]">
@@ -59,25 +51,20 @@ function CentralKitchen() {
                max-w-[1800px] w-auto h-auto z-0"
       />
 
-      {/* Bouton Log out */}
-      <button
-        onClick={handleLogout}
-        className="absolute top-6 right-6 bg-[#f85e00] hover:bg-[#d24a00] text-white font-medium py-1.5 px-4 rounded-full shadow-md transition"
-      >
-        Log out
-      </button>
+      {/* Cercle + bouton Log out */}
+      <LogoutBadge />
 
       {/* Titre */}
       <h1 className="text-6xl mb-4 tracking-tight">Central<br />Kitchen</h1>
 
-      {/*  Message de bienvenue */}
+      {/* Message de bienvenue */}
       <h2 className="text-xl italic mb-6 text-[#5a3a00]">
         Hello, <span className="font-bold text-[#891c1c]">{user?.username}</span> — ready to cook?
       </h2>
 
-      {/*  Interface principale */}
+      {/* Interface principale */}
       <div className="grid grid-cols-2 gap-6">
-        {/*  Sélection de client */}
+        {/* Sélection de client */}
         <div className="flex flex-col items-center">
           <select
             id="client-select"
@@ -108,7 +95,7 @@ function CentralKitchen() {
           </button>
         </div>
 
-        {/*  Paramètres */}
+        {/* Paramètres */}
         <div className="flex flex-col items-center">
           <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">Parameters</div>
           <button className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition">
@@ -116,7 +103,7 @@ function CentralKitchen() {
           </button>
         </div>
 
-        {/*  Inventaire */}
+        {/* Inventaire */}
         <div className="flex flex-col items-center">
           <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">Box Inventory</div>
           <button className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition">
@@ -124,7 +111,7 @@ function CentralKitchen() {
           </button>
         </div>
 
-        {/*  Ajouter un client */}
+        {/* Ajouter un client */}
         <div className="flex flex-col items-center">
           <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">Add a client</div>
           <button
