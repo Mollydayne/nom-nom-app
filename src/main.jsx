@@ -13,6 +13,8 @@ import ClientProfile from './pages/ClientProfile.jsx';
 import AddClient from './pages/AddClient.jsx';
 import EditClient from './pages/EditClient.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 
 
@@ -32,6 +34,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/clients/:id" element={<ClientProfile />} />
         <Route path="/add-client" element={<AddClient />} />
         <Route path="/edit-client/:id" element={<EditClient />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
 
       </Routes>
