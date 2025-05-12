@@ -11,24 +11,66 @@ require('dotenv').config();
 // Route d'inscription
 // ---------------------------
 router.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, role } = req.body;
+
   if (!username || !email || !password)
     return res.status(400).json({ error: 'Missing fields' });
 
   const normalizedEmail = email.toLowerCase();
+  const userRole = role === 'traiteur' ? 'traiteur' : 'client'; // sécurité : empêche des rôles bidons
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     db.run(
-      `INSERT INTO users (username, email, password) VALUES (?, ?, ?)`,
-      [username, normalizedEmail, hashedPassword],
+      `INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
+      [username, normalizedEmail, hashedPassword, userRole],
       function (err) {
         if (err) return res.status(500).json({ error: err.message });
 
-        res.status(201).json({
-          message: 'User registered successfully',
-          userId: this.lastID,
+        // Envoi de l'e-mail de bienvenue
+        const transporter = require('nodemailer').createTransport({
+          host: process.env.SMTP_HOST,
+          port: process.env.SMTP_PORT,
+          auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+          },
+        });
+
+        const htmlWelcome = `
+          <div style="font-family: 'Helvetica Neue', sans-serif; background-color: #fff7e6; color: #5a3a00; padding: 2rem;">
+            <div style="max-width: 600px; margin: auto; border: 1px solid #ffd29d; border-radius: 12px; padding: 2rem; background-color: #fff;">
+              <h2 style="color: #a41623;">Bienvenue chez NomNom !</h2>
+              <p>Bonjour ${username},</p>
+              <p>Merci de rejoindre la communauté NomNom en tant que <strong>${userRole}</strong> !</p>
+              <p>Depuis votre profil, vous pourrez suivre vos commandes, paiements, ou organiser vos livraisons si vous êtes traiteur.</p>
+              <hr style="margin: 2rem 0;" />
+              <p style="font-size: 0.9rem; color: #918450;">
+                🍽 NomNom Central Kitchen<br />
+                À très vite autour d'une bonne gamelle ❤
+              </p>
+            </div>
+          </div>
+        `;
+
+        const mailOptions = {
+          from: `"NomNom App" <${process.env.SMTP_USER}>`,
+          to: normalizedEmail,
+          subject: "Bienvenue chez NomNom !",
+          html: htmlWelcome,
+        };
+
+        transporter.sendMail(mailOptions, (err, info) => {
+          if (err) {
+            console.error("Erreur lors de l'envoi de l'email de bienvenue :", err);
+          }
+
+          res.status(201).json({
+            message: 'User registered successfully',
+            userId: this.lastID,
+            role: userRole,
+          });
         });
       }
     );
@@ -36,6 +78,7 @@ router.post('/register', async (req, res) => {
     res.status(500).json({ error: 'Error hashing password' });
   }
 });
+
 
 // ---------------------------
 // Route de connexion

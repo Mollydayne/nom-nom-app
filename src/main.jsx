@@ -15,6 +15,8 @@ import EditClient from './pages/EditClient.jsx';
 import ProtectedRoute from './components/ProtectedRoute';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import HomePage from './pages/HomePage';
+import SignupPage from './pages/SignupPage'; // ← cette ligne doit exister
 
 
 
@@ -28,7 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<App />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/central-kitchen" element={<CentralKitchen />} />
         <Route path="/clients/:id" element={<ClientProfile />} />
@@ -36,6 +38,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/edit-client/:id" element={<EditClient />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/signup" element={<SignupPage />} />
 
 
       </Routes>
