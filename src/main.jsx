@@ -22,7 +22,8 @@ import ClientDashboard from './pages/ClientDashboard.jsx';
 import ClientRoute from './components/ClientRoute.jsx';
 import Unauthorized from './pages/Unauthorized.jsx'; 
 import TraiteurRoute from "./components/TraiteurRoute.jsx";
-
+import MentionsLegales from './pages/MentionsLegales.jsx';
+import AboutPage from './pages/AboutPage';
 
 // Import du fichier css
 import './index.css';
@@ -43,6 +44,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/test-delivery" element={<TestDelivery />} />
+        <Route path="/mentions-legales" element={<MentionsLegales />} />
+        <Route path="/a-propos" element={<AboutPage />} />
+
 
         {/* Route client protégée */}
         <Route

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import BentoDecoration from '../components/BentoDecoration';
 import Toast from '../components/Toast';
+import LogoutBadge from '../components/LogoutBadge';
+import TopRightCircle from '../components/TopRightCircle';
 
 function Login() {
   const [form, setForm] = useState({
@@ -65,7 +67,7 @@ function Login() {
     <div className="min-h-screen bg-[#ffb563] flex flex-col items-center justify-center font-zenloop px-4 relative text-[#5a3a00]">
       {/* Image décorative en haut à gauche */}
       <BentoDecoration />
-
+      <TopRightCircle />
       {/* Titre de la page */}
       <h1 className="text-5xl sm:text-6xl md:text-7xl text-[#891c1c] mb-8 leading-none">
         Welcome back !
