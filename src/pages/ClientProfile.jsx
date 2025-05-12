@@ -10,15 +10,25 @@ function ClientProfile() {
   const [finalToast, setFinalToast] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetch(`http://localhost:3001/api/clients/${id}`)
-      .then((res) => res.json())
-      .then((data) => setClient(data))
-      .catch((err) => {
-        console.error('Erreur client :', err);
-        navigate('/central-kitchen');
-      });
-  }, [id, navigate]);
+useEffect(() => {
+  const token = localStorage.getItem('token');
+
+  fetch(`http://localhost:3001/api/clients/${id}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error('Erreur lors du chargement');
+      return res.json();
+    })
+    .then((data) => setClient(data))
+    .catch((err) => {
+      console.error('Erreur client :', err);
+      navigate('/central-kitchen');
+    });
+}, [id, navigate]);
+
 
   const confirmDelete = () => {
     setShowConfirmToast(true);
@@ -30,29 +40,36 @@ function ClientProfile() {
     setTimeout(() => setFinalToast(null), 2000);
   };
 
-  const proceedDelete = async () => {
-    setShowConfirmToast(false);
+const proceedDelete = async () => {
+  setShowConfirmToast(false);
 
-    try {
-      const res = await fetch(`http://localhost:3001/api/clients/${client.id}`, {
-        method: 'DELETE',
-      });
+  const token = localStorage.getItem('token');
+  console.log('🔑 Token utilisé pour suppression :', token); // Debug
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Error deleting client');
-      }
+  try {
+    const res = await fetch(`http://localhost:3001/api/clients/${client.id}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      setFinalToast('deleted');
-      setTimeout(() => {
-        setFinalToast(null);
-        navigate('/central-kitchen');
-      }, 2000);
-    } catch (err) {
-      console.error('Erreur suppression client :', err.message);
-      alert('Could not delete client');
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || 'Error deleting client');
     }
-  };
+
+    setFinalToast('deleted');
+    setTimeout(() => {
+      setFinalToast(null);
+      navigate('/central-kitchen');
+    }, 2000);
+  } catch (err) {
+    console.error('Erreur suppression client :', err.message);
+    alert('Could not delete client');
+  }
+};
+
 
   if (!client) return <p className="text-center mt-10">Loading client profile...</p>;
 

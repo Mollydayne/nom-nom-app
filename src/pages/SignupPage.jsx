@@ -6,20 +6,24 @@ import TopRightCircle from '../components/TopRightCircle';
 function SignupPage() {
   const navigate = useNavigate();
 
+  // État du formulaire
   const [form, setForm] = useState({
-    username: '',
+    prenom: '',
+    nom: '',
     email: '',
-    password: '',
-    role: 'client', // Valeur par défaut
+    motDePasse: '',
+    role: 'client',
   });
 
   const [error, setError] = useState('');
 
+  // Mise à jour des champs du formulaire
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   };
 
+  // Soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -34,7 +38,7 @@ function SignupPage() {
     if (res.ok) {
       navigate('/login');
     } else {
-      setError(data.error || 'Erreur à l’inscription');
+      setError(data.error || "Erreur à l’inscription");
     }
   };
 
@@ -43,15 +47,28 @@ function SignupPage() {
       <BentoDecoration />
       <TopRightCircle />
 
-      <h1 className="text-5xl sm:text-6xl md:text-7xl text-[#891c1c] mb-8 leading-none">Create your account</h1>
+      <h1 className="text-5xl sm:text-6xl md:text-7xl text-[#891c1c] mb-8 leading-none">
+        Création de compte
+      </h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col items-center w-full max-w-sm">
         <input
           type="text"
-          name="username"
-          placeholder="Username"
-          value={form.username}
+          name="prenom"
+          placeholder="Prénom"
+          value={form.prenom}
           onChange={handleChange}
+          required
+          className="mb-4 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] w-full outline-none"
+        />
+
+        <input
+          type="text"
+          name="nom"
+          placeholder="Nom"
+          value={form.nom}
+          onChange={handleChange}
+          required
           className="mb-4 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] w-full outline-none"
         />
 
@@ -61,19 +78,20 @@ function SignupPage() {
           placeholder="Email"
           value={form.email}
           onChange={handleChange}
+          required
           className="mb-4 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] w-full outline-none"
         />
 
         <input
           type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
+          name="motDePasse"
+          placeholder="Mot de passe"
+          value={form.motDePasse}
           onChange={handleChange}
+          required
           className="mb-4 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] w-full outline-none"
         />
 
-        {/* Sélecteur de rôle */}
         <select
           name="role"
           value={form.role}
@@ -88,7 +106,7 @@ function SignupPage() {
           type="submit"
           className="w-40 sm:w-48 md:w-56 px-6 py-2 bg-[#f85e00] text-white font-medium rounded-full hover:bg-[#d24a00] transition text-center"
         >
-          Sign up
+          S'inscrire
         </button>
 
         {error && <p className="mt-4 text-red-700">{error}</p>}
@@ -97,7 +115,7 @@ function SignupPage() {
       <p className="mt-6 text-[#5a3a00] text-lg">
         Déjà inscrit ?
         <Link to="/login" className="hover:text-[#891c1c] transition ml-1">
-          Log in !
+          Se connecter
         </Link>
       </p>
     </div>

@@ -8,19 +8,20 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 // ---------------------------
-// Route d'inscription
+// Route d'inscription avec liaison à une fiche client existante
 // ---------------------------
 router.post('/register', async (req, res) => {
-  const { username, email, password, role } = req.body;
+  const { prenom, nom, email, motDePasse, role } = req.body;
 
-  if (!username || !email || !password)
-    return res.status(400).json({ error: 'Missing fields' });
+  if (!prenom || !nom || !email || !motDePasse)
+    return res.status(400).json({ error: 'Champs requis manquants' });
 
   const normalizedEmail = email.toLowerCase();
-  const userRole = role === 'traiteur' ? 'traiteur' : 'client'; // sécurité : empêche des rôles bidons
+  const username = `${prenom.trim()} ${nom.trim()}`;
+  const userRole = role === 'traiteur' ? 'traiteur' : 'client';
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(motDePasse, 10);
 
     db.run(
       `INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
@@ -28,8 +29,35 @@ router.post('/register', async (req, res) => {
       function (err) {
         if (err) return res.status(500).json({ error: err.message });
 
-        // Envoi de l'e-mail de bienvenue
-        const transporter = require('nodemailer').createTransport({
+        const newUserId = this.lastID;
+
+        // Si client : on tente de lier à une fiche existante
+        if (userRole === 'client') {
+          db.get(
+            `SELECT id FROM clients WHERE email = ? AND user_id IS NULL`,
+            [normalizedEmail],
+            (err, clientRow) => {
+              if (err) {
+                console.error("Erreur recherche fiche client :", err.message);
+              } else if (clientRow) {
+                db.run(
+                  `UPDATE clients SET user_id = ? WHERE id = ?`,
+                  [newUserId, clientRow.id],
+                  (err) => {
+                    if (err) {
+                      console.error("Erreur liaison user/client :", err.message);
+                    } else {
+                      console.log("Fiche client liée à l'utilisateur.");
+                    }
+                  }
+                );
+              }
+            }
+          );
+        }
+
+        // Envoi de l'email de bienvenue
+        const transporter = nodemailer.createTransport({
           host: process.env.SMTP_HOST,
           port: process.env.SMTP_PORT,
           auth: {
@@ -41,14 +69,14 @@ router.post('/register', async (req, res) => {
         const htmlWelcome = `
           <div style="font-family: 'Helvetica Neue', sans-serif; background-color: #fff7e6; color: #5a3a00; padding: 2rem;">
             <div style="max-width: 600px; margin: auto; border: 1px solid #ffd29d; border-radius: 12px; padding: 2rem; background-color: #fff;">
-              <h2 style="color: #a41623;">Bienvenue chez NomNom !</h2>
-              <p>Bonjour ${username},</p>
+              <h2 style="color: #a41623;">Bienvenue chez NomNom</h2>
+              <p>Bonjour ${prenom},</p>
               <p>Merci de rejoindre la communauté NomNom en tant que <strong>${userRole}</strong> !</p>
               <p>Depuis votre profil, vous pourrez suivre vos commandes, paiements, ou organiser vos livraisons si vous êtes traiteur.</p>
               <hr style="margin: 2rem 0;" />
               <p style="font-size: 0.9rem; color: #918450;">
-                🍽 NomNom Central Kitchen<br />
-                À très vite autour d'une bonne gamelle ❤
+                NomNom Central Kitchen<br />
+                À très vite autour d'une bonne gamelle
               </p>
             </div>
           </div>
@@ -57,27 +85,28 @@ router.post('/register', async (req, res) => {
         const mailOptions = {
           from: `"NomNom App" <${process.env.SMTP_USER}>`,
           to: normalizedEmail,
-          subject: "Bienvenue chez NomNom !",
+          subject: "Bienvenue chez NomNom",
           html: htmlWelcome,
         };
 
-        transporter.sendMail(mailOptions, (err, info) => {
+        transporter.sendMail(mailOptions, (err) => {
           if (err) {
-            console.error("Erreur lors de l'envoi de l'email de bienvenue :", err);
+            console.error("Erreur envoi email de bienvenue :", err);
           }
 
           res.status(201).json({
-            message: 'User registered successfully',
-            userId: this.lastID,
+            message: 'Utilisateur inscrit avec succès',
+            userId: newUserId,
             role: userRole,
           });
         });
       }
     );
   } catch (err) {
-    res.status(500).json({ error: 'Error hashing password' });
+    res.status(500).json({ error: 'Erreur lors du traitement du mot de passe' });
   }
 });
+
 
 
 // ---------------------------

@@ -10,26 +10,35 @@ function CentralKitchen() {
   const [clients, setClients] = useState([]);
   const [selectedClientId, setSelectedClientId] = useState('');
 
-  // Redirection vers /login si pas de session
+  // Redirection vers /login si pas connecté
   useEffect(() => {
     if (!token || !user) {
       navigate('/login');
     }
   }, [token, user, navigate]);
 
-  // Fonction pour charger la liste des clients
+  // Fonction pour charger les clients liés au traiteur
   const fetchClients = () => {
-    fetch('http://localhost:3001/api/clients')
-      .then((res) => res.json())
+    fetch('http://localhost:3001/api/clients', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Unauthorized or failed request');
+        }
+        return res.json();
+      })
       .then((data) => setClients(data))
-      .catch((err) => console.error('Erreur chargement clients :', err));
+      .catch((err) => {
+        console.error('Erreur chargement clients :', err);
+        setClients([]); // évite le crash dans .map
+      });
   };
 
-  // Charger les clients au premier affichage
   useEffect(() => {
     fetchClients();
-
-    // Recharge les clients quand l'utilisateur revient sur l'onglet
     window.addEventListener('focus', fetchClients);
     return () => {
       window.removeEventListener('focus', fetchClients);
@@ -51,7 +60,7 @@ function CentralKitchen() {
                max-w-[1800px] w-auto h-auto z-0"
       />
 
-      {/* Cercle + bouton Log out */}
+      {/* Badge de logout */}
       <LogoutBadge />
 
       {/* Titre */}
@@ -72,8 +81,8 @@ function CentralKitchen() {
             onChange={(e) => setSelectedClientId(e.target.value)}
             className="mb-2 px-4 py-1 rounded-full bg-[#ffe4b3] text-[#5a3a00] outline-none text-center"
           >
-            <option value="">-- Select a name  --</option>
-            {clients.map((client) => (
+            <option value="">-- Select a name --</option>
+            {Array.isArray(clients) && clients.map((client) => (
               <option key={client.id} value={client.id}>
                 {client.firstName} {client.lastName}
               </option>

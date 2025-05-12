@@ -23,12 +23,12 @@ function Login() {
     }
   }, []);
 
-  // Met à jour les champs du formulaire à chaque saisie
+  // Met à jour les champs du formulaire
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Envoie le formulaire au backend pour authentification
+  // Envoie du formulaire au backend pour authentification
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -41,10 +41,21 @@ function Login() {
     const data = await res.json();
 
     if (res.ok) {
-      // Sauvegarde le token et les infos utilisateur
+      const role = data.user.role;
+
+      // Sauvegarde dans le localStorage
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/central-kitchen');
+      localStorage.setItem('role', role);
+
+      // Redirige selon le rôle
+      if (role === 'client') {
+        navigate('/client-dashboard');
+      } else if (role === 'traiteur') {
+        navigate('/central-kitchen');
+      } else {
+        navigate('/unauthorized');
+      }
     } else {
       setError(data.error || 'Erreur de connexion');
     }
@@ -79,9 +90,6 @@ function Login() {
           className="mb-6 px-6 py-2 rounded-full bg-[#ffe4b3] text-black text-center outline-none w-full focus:bg-[#ffeecd] hover:bg-[#ffeecd] transition"
         />
 
-
-
-
         <button
           type="submit"
           className="w-40 sm:w-48 md:w-56 px-6 py-2 bg-[#f85e00] text-white font-medium rounded-full hover:bg-[#d24a00] transition text-center"
@@ -89,16 +97,14 @@ function Login() {
           Log in
         </button>
 
+        <Link
+          to="/forgot-password"
+          className="mt-6 text-sm text-[#5a3a00] hover:text-[#891c1c] transition"
+        >
+          Mot de passe oublié ?
+        </Link>
 
-<Link
-  to="/forgot-password"
-  className="mt-6 text-sm text-[#5a3a00] hover:text-[#891c1c] transition"
->
-  Mot de passe oublié ?
-</Link>
-
-
-        {/* Message d'erreur si authentification échouée */}
+        {/* Message d'erreur si connexion échouée */}
         {error && <p className="mt-4 text-red-700">{error}</p>}
       </form>
 

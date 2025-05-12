@@ -1,4 +1,4 @@
-// Import des modules - point d'entrée principal du frnt
+// Import des modules - point d'entrée principal du front
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -16,8 +16,12 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import HomePage from './pages/HomePage';
-import SignupPage from './pages/SignupPage'; // ← cette ligne doit exister
-
+import SignupPage from './pages/SignupPage'; 
+import TestDelivery from './pages/TestDelivery';
+import ClientDashboard from './pages/ClientDashboard.jsx';
+import ClientRoute from './components/ClientRoute.jsx';
+import Unauthorized from './pages/Unauthorized.jsx'; 
+import TraiteurRoute from "./components/TraiteurRoute.jsx";
 
 
 // Import du fichier css
@@ -32,15 +36,37 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/central-kitchen" element={<CentralKitchen />} />
         <Route path="/clients/:id" element={<ClientProfile />} />
         <Route path="/add-client" element={<AddClient />} />
         <Route path="/edit-client/:id" element={<EditClient />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/test-delivery" element={<TestDelivery />} />
 
+        {/* Route client protégée */}
+        <Route
+          path="/client-dashboard"
+          element={
+            <ClientRoute>
+              <ClientDashboard />
+            </ClientRoute>
+          }
+        />
 
+        {/* Route traiteur protégée */}
+
+        <Route
+  path="/central-kitchen"
+  element={
+    <TraiteurRoute>
+      <CentralKitchen />
+    </TraiteurRoute>
+  }
+/>
+
+        {/* Page non autorisée */}
+        <Route path="/unauthorized" element={<Unauthorized />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>

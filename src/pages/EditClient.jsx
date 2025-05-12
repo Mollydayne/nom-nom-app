@@ -18,10 +18,19 @@ function EditClient() {
   const [error, setError] = useState('');
   const [showToast, setShowToast] = useState(false);
 
-  // Charge les données existantes du client
+  // Charge les données existantes du client à l'ouverture de la page
   useEffect(() => {
-    fetch(`http://localhost:3001/api/clients/${id}`)
-      .then((res) => res.json())
+    const token = localStorage.getItem('token');
+
+    fetch(`http://localhost:3001/api/clients/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Erreur lors du chargement du client');
+        return res.json();
+      })
       .then((data) => {
         setForm({
           firstName: data.firstName || '',
@@ -47,17 +56,22 @@ function EditClient() {
     e.preventDefault();
     setError('');
 
+    const token = localStorage.getItem('token');
+
     try {
       const res = await fetch(`http://localhost:3001/api/clients/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify(form),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur lors de la mise à jour');
 
-      setShowToast(true); // Affiche le toast de confirmation
+      setShowToast(true);
       setTimeout(() => {
         setShowToast(false);
         navigate(`/clients/${id}`);
@@ -96,7 +110,7 @@ function EditClient() {
         <input
           name="email"
           type="email"
-          placeholder="Email (optional)"
+          placeholder="Email (optionnel)"
           value={form.email}
           onChange={handleChange}
           className="px-4 py-2 rounded-full bg-[#ffe4b3] text-center text-black outline-none focus:bg-[#ffeecd] hover:bg-[#ffeecd] transition"
@@ -104,7 +118,7 @@ function EditClient() {
         <input
           name="allergies"
           type="text"
-          placeholder="Allergies (comma separated)"
+          placeholder="Allergies (séparées par des virgules)"
           value={form.allergies}
           onChange={handleChange}
           className="px-4 py-2 rounded-full bg-[#ffe4b3] text-center text-black outline-none focus:bg-[#ffeecd] hover:bg-[#ffeecd] transition"
@@ -112,7 +126,7 @@ function EditClient() {
         <input
           name="likes"
           type="text"
-          placeholder="Likes (comma separated)"
+          placeholder="Likes (séparés par des virgules)"
           value={form.likes}
           onChange={handleChange}
           className="px-4 py-2 rounded-full bg-[#ffe4b3] text-center text-black outline-none focus:bg-[#ffeecd] hover:bg-[#ffeecd] transition"
@@ -122,25 +136,25 @@ function EditClient() {
           type="submit"
           className="bg-[#f85e00] text-white py-2 rounded-full hover:bg-[#d24a00] transition"
         >
-          Save changes
+          Enregistrer les modifications
         </button>
 
         {error && <p className="text-red-700 mt-2">{error}</p>}
       </form>
 
-      {/* Bouton de retour vers Central Kitchen */}
+      {/* Bouton de retour vers la page principale */}
       <button
         onClick={() => navigate('/central-kitchen')}
         type="button"
         className="mt-4 px-6 py-2 bg-[#f85e00] text-white rounded-full hover:bg-[#d24a00] transition"
       >
-        Back to kitchen
+        Retour à Central Kitchen
       </button>
 
-      {/* Toast de confirmation */}
+      {/* Toast de confirmation si modification réussie */}
       {showToast && (
         <Toast
-          message="Modification(s) enregistrée(s) ! "
+          message="Modification(s) enregistrée(s)"
           type="success"
           duration={2500}
           onClose={() => setShowToast(false)}
