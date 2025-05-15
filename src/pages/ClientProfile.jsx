@@ -99,7 +99,7 @@ const proceedDelete = async () => {
 
         <button
           onClick={() => navigate(`/edit-client/${client.id}`)}
-          className="px-6 py-2 bg-[#5a3a00] text-white rounded-full hover:bg-[#3d2a00] transition"
+          className="px-6 py-2 bg-[#5a3a00] text-white rounded-full hover:bg-[#3d2a00] transition cursor-pointer"
         >
           Modifier
         </button>

@@ -71,7 +71,7 @@ router.post('/', authenticateToken, (req, res) => {
   }
 
   db.get(
-    `SELECT * FROM clients 
+    `SELECT * FROM clients
      WHERE ((firstName = ? AND lastName = ?) OR (email = ? AND email IS NOT NULL))
      AND chef_id = ?`,
     [firstName, lastName, email, chefId],
