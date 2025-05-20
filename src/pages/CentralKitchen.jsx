@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LogoutBadge from '../components/LogoutBadge';
+import QRCodeScanner from '../components/QRCodeScanner';
+
 
 function CentralKitchen() {
   const navigate = useNavigate();
@@ -104,13 +106,17 @@ function CentralKitchen() {
           </button>
         </div>
 
-        {/* Paramètres */}
-        <div className="flex flex-col items-center">
-          <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">Parameters</div>
-          <button className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition">
-            Go !
-          </button>
-        </div>
+        {/* Accès au QR code */}
+<div className="flex flex-col items-center">
+  <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">QR Code</div>
+  <button
+    onClick={() => navigate('/qr-code')}
+    className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition"
+  >
+    Voir
+  </button>
+</div>
+
 
         {/* Inventaire */}
         <div className="flex flex-col items-center">

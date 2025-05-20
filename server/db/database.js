@@ -37,11 +37,15 @@ db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS deliveries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      client_id INTEGER NOT NULL,       -- identifiant du client livré
-      sender_id INTEGER NOT NULL,       -- identifiant du traiteur
-      quantity INTEGER NOT NULL,        -- nombre de gamelles livrées
-      date TEXT NOT NULL,               -- date de livraison (format ISO)
-      returned INTEGER DEFAULT 0,       -- 0 = pas encore rendu, 1 = rendu
+      client_id INTEGER NOT NULL,
+      sender_id INTEGER NOT NULL,
+      quantity INTEGER NOT NULL,
+      date TEXT NOT NULL,
+      returned INTEGER DEFAULT 0,
+      paid INTEGER DEFAULT 0,
+      price REAL,
+      qr_token TEXT,
+      box_id INTEGER,
       FOREIGN KEY (client_id) REFERENCES users(id),
       FOREIGN KEY (sender_id) REFERENCES users(id)
     )

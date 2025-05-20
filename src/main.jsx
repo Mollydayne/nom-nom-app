@@ -24,6 +24,9 @@ import Unauthorized from './pages/Unauthorized.jsx';
 import TraiteurRoute from "./components/TraiteurRoute.jsx";
 import MentionsLegales from './pages/MentionsLegales.jsx';
 import AboutPage from './pages/AboutPage';
+import QRCodePage from './pages/QRCodePage.jsx';
+import QRCodePrintPage from './pages/QRCodePrintPage';
+
 
 // Import du fichier css
 import './index.css';
@@ -46,6 +49,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/test-delivery" element={<TestDelivery />} />
         <Route path="/mentions-legales" element={<MentionsLegales />} />
         <Route path="/a-propos" element={<AboutPage />} />
+        <Route path="/qr-code" element={<QRCodePage />} />
+        <Route path="/qr-print/:token" element={<QRCodePrintPage />} />
+
+
 
 
         {/* Route client protégée */}
