@@ -28,8 +28,8 @@ db.serialize(() => {
       email TEXT,
       allergies TEXT,
       likes TEXT,
-      chef_id INTEGER,                             -- lien avec le traiteur
-      FOREIGN KEY (chef_id) REFERENCES users(id)   -- clé étrangère
+      chef_id INTEGER,                      
+      FOREIGN KEY (chef_id) REFERENCES users(id)  
     )
   `);
 

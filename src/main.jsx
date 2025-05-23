@@ -28,11 +28,10 @@ import QRCodePage from './pages/QRCodePage.jsx';
 import QRCodePrintPage from './pages/QRCodePrintPage';
 
 
-// Import du fichier css
 import './index.css';
 
 // Les routes possibles
-// 07/05/25 : note to self, ajouter des routes protégées si non log
+// 07/05/25 : note to self, ajouter des routes protégées si non log : ok
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

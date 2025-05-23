@@ -9,10 +9,18 @@ const fs = require('fs');
 
 // Route : ajouter une nouvelle livraison (QR code ou réutilisation)
 router.post('/', authenticateToken, (req, res) => {
+  console.log(' BODY reçu :', req.body);
+
   const { client_id, quantity, date, reuse_qr_token } = req.body;
   const sender_id = req.user.id;
 
+  console.log('  Vérification des champs requis :');
+  console.log('  client_id =', client_id);
+  console.log('  quantity  =', quantity);
+  console.log('  date      =', date);
+
   if (!client_id || !quantity || !date) {
+    console.log('Champs requis manquants → 400');
     return res.status(400).json({ error: 'Champs requis manquants' });
   }
 
@@ -23,7 +31,6 @@ router.post('/', authenticateToken, (req, res) => {
   const qrPath = path.join(qrDir, `${qr_token}.png`);
   const qrData = `http://localhost:3001/api/qr/${qr_token}`;
 
-  // Si c’est une réutilisation, ne régénère pas le QR
   const proceed = () => {
     db.run(
       `INSERT INTO deliveries (client_id, sender_id, quantity, date, returned, paid, price, qr_token)
@@ -35,25 +42,28 @@ router.post('/', authenticateToken, (req, res) => {
           return res.status(500).json({ error: 'Erreur serveur' });
         }
 
+        console.log('Livraison enregistrée avec ID :', this.lastID);
         res.status(201).json({
-          message: reuse_qr_token ? 'Livraison réutilisant une boîte existante' : 'Livraison enregistrée avec QR code',
+          message: reuse_qr_token
+            ? 'Livraison réutilisant une boîte existante'
+            : 'Livraison enregistrée avec QR code',
           deliveryId: this.lastID,
           qr_token,
           qr_url: qrData,
-          qr_image_url: `http://localhost:3001/qrcodes/${qr_token}.png`
+          qr_image_url: `http://localhost:3001/qrcodes/${qr_token}.png`,
         });
       }
     );
   };
 
   if (reuse_qr_token) {
+    console.log('♻️ Réutilisation de QR code');
     return proceed();
   }
 
-  // Générer le QR code si pas de réutilisation
   fs.mkdir(qrDir, { recursive: true }, (mkdirErr) => {
     if (mkdirErr) {
-      console.error('Erreur dossier QR :', mkdirErr.message);
+      console.error('Erreur création dossier QR :', mkdirErr.message);
       return res.status(500).json({ error: 'Erreur serveur' });
     }
 
@@ -62,6 +72,8 @@ router.post('/', authenticateToken, (req, res) => {
         console.error('Erreur QR code :', qrErr.message);
         return res.status(500).json({ error: 'Erreur QR code' });
       }
+
+      console.log('📸 QR code généré avec succès');
       proceed();
     });
   });

@@ -3,6 +3,8 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import BentoDecoration from '../components/BentoDecoration';
 import Toast from '../components/Toast';
 import { useNavigate } from 'react-router-dom';
+import ReturnToKitchen from '../components/ReturnToKitchen';
+
 
 function QRCodePage() {
   const [scanResult, setScanResult] = useState(null);
@@ -11,9 +13,24 @@ function QRCodePage() {
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
 
+  const [clients, setClients] = useState([]);
+  const [selectedClientId, setSelectedClientId] = useState('');
+  const [quantity, setQuantity] = useState('');
+
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
 
+  // Chargement des clients à l'arrivée sur la page
+  useEffect(() => {
+    fetch('http://localhost:3001/api/clients', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setClients(data))
+      .catch((err) => console.error('Erreur chargement clients :', err));
+  }, [token]);
+
+  // Initialisation du scanner QR
   useEffect(() => {
     const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 }, false);
 
@@ -84,10 +101,72 @@ function QRCodePage() {
     navigate(`/qr-print/${qrToken}`);
   };
 
+  const handleCreateQRCode = () => {
+    const today = new Date().toISOString().split("T")[0];
+
+    fetch('http://localhost:3001/api/deliveries', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        client_id: selectedClientId,
+        quantity,
+        date: today
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        setToast({ type: 'success', message: 'QR code généré avec succès !' });
+        setQrToken(data.qr_token);
+        setScanResult({ message: data.message, delivery_id: data.deliveryId, client_id: selectedClientId });
+        fetchDeliveryHistory(data.qr_token);
+      })
+      .catch(() => {
+        setToast({ type: 'error', message: 'Erreur lors de la génération du QR code.' });
+      });
+  };
+
   return (
     <div className="min-h-screen bg-[#ffb563] px-4 pt-12 text-[#891c1c] flex flex-col items-center font-zenloop">
       <BentoDecoration />
-      <h1 className="text-5xl mb-4">QR Code Scanner</h1>
+      <ReturnToKitchen position="top-left" />
+
+      <h1 className="text-5xl mb-6">Gestion des QR code</h1>
+
+      {/* Formulaire de création */}
+      <div className="bg-white rounded-xl shadow-lg p-4 mb-6 w-full max-w-md text-[#5a3a00]">
+        <h2 className="text-xl font-semibold mb-3">Créer un nouveau QR code</h2>
+        <select
+          value={selectedClientId}
+          onChange={(e) => setSelectedClientId(e.target.value)}
+          className="w-full mb-2 px-4 py-2 rounded-full bg-[#fff7e6] outline-none"
+        >
+          <option value="">-- Sélectionner un client --</option>
+          {clients.map((client) => (
+            <option key={client.id} value={client.id}>
+              {client.firstName} {client.lastName}
+            </option>
+          ))}
+        </select>
+       <input
+  type="number"
+  min={1}
+  value={quantity}
+  onChange={(e) => setQuantity(e.target.value)}
+  className="w-full mb-3 px-4 py-2 rounded-full bg-[#fff7e6] outline-none text-center placeholder:text-[#918450]"
+  placeholder="Quantité"
+/>
+
+        <button
+          onClick={handleCreateQRCode}
+          disabled={!selectedClientId || quantity < 1}
+          className="w-full bg-[#f85e00] text-white py-2 rounded-full hover:bg-[#d24a00] transition"
+        >
+          Créer un QR code
+        </button>
+      </div>
 
       <div id="reader" className="w-full max-w-md" />
 
@@ -112,7 +191,7 @@ function QRCodePage() {
           <ul className="text-sm text-[#5a3a00] space-y-1 max-h-60 overflow-y-auto">
             {deliveryHistory.map((d) => (
               <li key={d.id} className="border-b border-dashed pb-1">
-                {d.date} — {d.firstName} {d.lastName} — {d.quantity} gamelle(s) — {d.returned ? '✔️ rendue' : '❌ en attente'}
+                {d.date} — {d.firstName} {d.lastName} — {d.quantity} gamelle(s) — {d.returned ? 'rendue' : 'en attente'}
               </li>
             ))}
           </ul>

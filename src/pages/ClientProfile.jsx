@@ -44,7 +44,7 @@ const proceedDelete = async () => {
   setShowConfirmToast(false);
 
   const token = localStorage.getItem('token');
-  console.log('🔑 Token utilisé pour suppression :', token); // Debug
+  console.log('Token utilisé pour suppression :', token); // Debug
 
   try {
     const res = await fetch(`http://localhost:3001/api/clients/${client.id}`, {
