@@ -5,12 +5,12 @@ const authenticateToken = require('../middleware/authenticateToken');
 const nodemailer = require('nodemailer'); // ajout requis pour envoyer des emails
 
 // =======================
-// GET - Dashboard client
+// GET - Dashboard client avec prénom + préférences
 // =======================
 router.get('/client-dashboard', authenticateToken, (req, res) => {
-  const clientId = req.user.id;
+  const userId = req.user.id;
 
-  const query = `
+  const dashboardQuery = `
     SELECT
       COUNT(*) AS total_delivered,
       SUM(CASE WHEN returned = 0 THEN 1 ELSE 0 END) AS pending_returns,
@@ -19,28 +19,58 @@ router.get('/client-dashboard', authenticateToken, (req, res) => {
     WHERE client_id = ?
   `;
 
-  db.get(query, [clientId], (err, row) => {
+  db.get(dashboardQuery, [userId], (err, row) => {
     if (err) {
-      console.error("Erreur SQL :", err.message);
+      console.error("Erreur SQL (dashboard) :", err.message);
       return res.status(500).json({ error: err.message });
     }
-    res.json(row);
+
+    // On récupère le prénom
+   db.get(`SELECT firstname FROM users WHERE id = ?`, [userId], (err, userRow) => {
+  if (err) {
+    console.error("Erreur SQL (prénom user) :", err.message);
+    return res.status(500).json({ error: err.message });
+  }
+
+  db.all(
+    `SELECT id, item, type FROM preference_items WHERE user_id = ?`,
+    [userId],
+    (err, preferences) => {
+      if (err) {
+        console.error("Erreur SQL (préférences) :", err.message);
+        return res.status(500).json({ error: err.message });
+      }
+
+      res.json({
+        firstName: userRow?.firstname || null,
+        preferences: preferences || [],
+        ...row
+      });
+    }
+  );
+});
+
   });
 });
 
 // =======================
-// GET - Tous les clients du traiteur connecté
+// Connexion fiche client
 // =======================
-router.get('/', authenticateToken, (req, res) => {
-  const chefId = req.user.id;
 
-  db.all(`SELECT * FROM clients WHERE chef_id = ?`, [chefId], (err, rows) => {
+router.get('/me', authenticateToken, (req, res) => {
+  const userEmail = req.user.email;
+
+  db.get(`SELECT * FROM clients WHERE email = ?`, [userEmail], (err, row) => {
     if (err) {
-      console.error("Erreur récupération clients :", err.message);
-      return res.status(500).json({ error: 'Database error' });
+      console.error("Erreur récupération client (par email) :", err.message);
+      return res.status(500).json({ error: "Erreur serveur" });
     }
 
-    res.json(rows);
+    if (!row) {
+      return res.status(404).json({ error: "Client non trouvé avec cet email" });
+    }
+
+    res.json(row);
   });
 });
 
@@ -211,5 +241,7 @@ router.delete('/:id', authenticateToken, (req, res) => {
     });
   });
 });
+
+
 
 module.exports = router;

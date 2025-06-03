@@ -36,4 +36,28 @@ router.get('/user/:userId', (req, res) => {
   );
 });
 
+// Route : mettre à jour une préférence existante
+router.patch('/:id', (req, res) => {
+  const preferenceId = req.params.id;
+  const { type } = req.body;
+
+  if (type !== 'liked' && type !== 'disliked' && type !== null) {
+    return res.status(400).json({ message: "Type must be 'liked', 'disliked' or null" });
+  }
+
+  db.run(
+    `UPDATE preference_items SET type = ? WHERE id = ?`,
+    [type, preferenceId],
+    function (err) {
+      if (err) return res.status(500).json({ message: "Erreur serveur", error: err.message });
+
+      if (this.changes === 0) {
+        return res.status(404).json({ message: "Préférence non trouvée" });
+      }
+
+      res.json({ message: "Préférence mise à jour", id: preferenceId, type });
+    }
+  );
+});
+
 module.exports = router;

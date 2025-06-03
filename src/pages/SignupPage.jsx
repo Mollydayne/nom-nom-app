@@ -1,3 +1,4 @@
+// SignupPage.jsx
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import BentoDecoration from '../components/BentoDecoration';
@@ -6,10 +7,10 @@ import TopRightCircle from '../components/TopRightCircle';
 function SignupPage() {
   const navigate = useNavigate();
 
-  // État du formulaire
+  // ✅ Clés modifiées ici : firstname, lastname
   const [form, setForm] = useState({
-    prenom: '',
-    nom: '',
+    firstname: '',
+    lastname: '',
     email: '',
     motDePasse: '',
     role: 'client',
@@ -17,13 +18,11 @@ function SignupPage() {
 
   const [error, setError] = useState('');
 
-  // Mise à jour des champs du formulaire
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   };
 
-  // Soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -54,9 +53,9 @@ function SignupPage() {
       <form onSubmit={handleSubmit} className="flex flex-col items-center w-full max-w-sm">
         <input
           type="text"
-          name="prenom"
+          name="firstname"
           placeholder="Prénom"
-          value={form.prenom}
+          value={form.firstname}
           onChange={handleChange}
           required
           className="mb-4 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] w-full outline-none"
@@ -64,9 +63,9 @@ function SignupPage() {
 
         <input
           type="text"
-          name="nom"
+          name="lastname"
           placeholder="Nom"
-          value={form.nom}
+          value={form.lastname}
           onChange={handleChange}
           required
           className="mb-4 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] w-full outline-none"

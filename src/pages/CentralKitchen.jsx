@@ -87,8 +87,11 @@ function CentralKitchen() {
       <h1 className="text-5xl sm:text-6xl md:text-7xl mb-6 tracking-tight text-center" tabIndex="0">Central<br />Kitchen</h1>
 
       <h2 className="text-xl sm:text-2xl italic mb-10 text-[#5a3a00] text-center" tabIndex="0">
-        Hello, <span className="font-bold text-[#891c1c]">{user?.username}</span> — {cookingMessage}
-      </h2>
+  Hello, <span className="font-bold text-[#891c1c]">
+    {user?.firstname ? user.firstname : 'Chef'}
+  </span> — {cookingMessage}
+</h2>
+
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-10 text-base sm:text-lg px-4">
         <div className="flex flex-col items-center">
