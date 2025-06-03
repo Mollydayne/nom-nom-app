@@ -21,3 +21,70 @@
 .shake-on-hover:hover {
   animation: shake 0.4s ease-in-out;
 }
+
+/* Variables dynamiques basées sur --on */
+:root {
+  --on: 0;
+  --bg: hsl(calc(200 - (var(--on) * 160)), calc(20% + (var(--on) * 50%)), calc(20% + (var(--on) * 60%)));
+  --cord: hsl(0, 0%, calc(60% - (var(--on) * 50%)));
+  --stroke: hsl(0, 0%, calc(60% - (var(--on) * 50%)));
+  --shine: hsla(0, 0%, 100%, calc(0.75 - (var(--on) * 0.5)));
+  --cap: hsl(0, 0%, calc(40% + (var(--on) * 30%)));
+  --filament: hsl(45, calc(var(--on) * 80%), calc(25% + (var(--on) * 75%)));
+}
+
+/* 🌃 Fond et texte dynamiques */
+body {
+  background: var(--bg);
+  color: hsl(0, 0%, calc(0% + var(--on) * 100%));
+  transition: background 0.4s ease, color 0.4s ease;
+  overflow-x: hidden;
+
+}
+
+/* Corde de la lampe */
+.toggle-scene__cord {
+  stroke: var(--cord);
+  cursor: move;
+}
+
+.toggle-scene__cord-end {
+  stroke: var(--cord);
+  fill: var(--cord);
+}
+
+.toggle-scene__dummy-cord line {
+  stroke: var(--cord);
+  stroke-width: 6;
+}
+
+/* Partie ampoule */
+.bulb__cap {
+  fill: var(--cap);
+}
+
+.bulb__cap-shine {
+  fill: var(--shine);
+}
+
+.bulb__cap-outline {
+  stroke: var(--stroke);
+}
+
+.bulb__filament {
+  stroke: var(--filament);
+}
+
+.bulb__shine {
+  stroke: var(--shine);
+}
+
+.bulb__bulb {
+  stroke: var(--stroke);
+  fill: hsla(calc(180 - (95 * var(--on))), 80%, 80%, calc(0.1 + (0.4 * var(--on))));
+}
+
+.bulb__flash {
+  stroke: hsl(45, 80%, 80%);
+  display: none;
+}

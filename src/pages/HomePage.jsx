@@ -3,6 +3,8 @@ import { useState } from 'react';
 import BentoDecoration from '../components/BentoDecoration';
 import TopRightCircle from '../components/TopRightCircle';
 import useScrollSpy from '../hooks/useScrollSpy';
+import LightBulbSwitch from '../components/LightBulbSwitch';
+
 
 function HomePage() {
   // Hook pour suivre la section visible à l'écran

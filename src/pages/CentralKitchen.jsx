@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LogoutBadge from '../components/LogoutBadge';
 import QRCodeScanner from '../components/QRCodeScanner';
-
 
 function CentralKitchen() {
   const navigate = useNavigate();
@@ -11,15 +10,15 @@ function CentralKitchen() {
 
   const [clients, setClients] = useState([]);
   const [selectedClientId, setSelectedClientId] = useState('');
+  const [cookingMessage, setCookingMessage] = useState('');
+  const messageRef = useRef();
 
-  // Redirection vers /login si pas connecté
   useEffect(() => {
     if (!token || !user) {
       navigate('/login');
     }
   }, [token, user, navigate]);
 
-  // Fonction pour charger les clients liés au traiteur
   const fetchClients = () => {
     fetch('http://localhost:3001/api/clients', {
       headers: {
@@ -35,7 +34,7 @@ function CentralKitchen() {
       .then((data) => setClients(data))
       .catch((err) => {
         console.error('Erreur chargement clients :', err);
-        setClients([]); // évite le crash dans .map
+        setClients([]);
       });
   };
 
@@ -47,10 +46,31 @@ function CentralKitchen() {
     };
   }, []);
 
-  return (
-    <div className="min-h-screen bg-[#ffb563] relative font-zenloop px-4 flex flex-col items-center justify-center text-[#891c1c]">
+  useEffect(() => {
+    const messages = [
+      "ready to cook?",
+      "let's get cookin'!",
+      "hungry for action?",
+      "time to spice things up!",
+      "bring on the bento!",
+      "let's stir some love!",
+      "gamelle time!",
+      "chop chop chef!",
+      "ready to stir magic?"
+    ];
+    const randomIndex = Math.floor(Math.random() * messages.length);
+    const selected = messages[randomIndex];
+    setCookingMessage(selected);
+    if (messageRef.current) {
+      messageRef.current.textContent = `Welcome message updated: ${selected}`;
+    }
+  }, [navigate]);
 
-      {/* Image bento en haut à gauche */}
+  return (
+    <main className="min-h-screen bg-[#ffb563] relative font-zenloop px-4 flex flex-col items-center justify-center text-[#891c1c] animate-fade-in" role="main" tabIndex="-1">
+
+      <div ref={messageRef} className="sr-only" role="status" aria-live="polite"></div>
+
       <img
         src="/bento.png"
         alt="Bento decoration"
@@ -62,28 +82,24 @@ function CentralKitchen() {
                max-w-[1800px] w-auto h-auto z-0"
       />
 
-      {/* Badge de logout */}
       <LogoutBadge />
 
-      {/* Titre */}
-      <h1 className="text-6xl mb-4 tracking-tight">Central<br />Kitchen</h1>
+      <h1 className="text-5xl sm:text-6xl md:text-7xl mb-6 tracking-tight text-center" tabIndex="0">Central<br />Kitchen</h1>
 
-      {/* Message de bienvenue */}
-      <h2 className="text-xl italic mb-6 text-[#5a3a00]">
-        Hello, <span className="font-bold text-[#891c1c]">{user?.username}</span> — ready to cook?
+      <h2 className="text-xl sm:text-2xl italic mb-10 text-[#5a3a00] text-center" tabIndex="0">
+        Hello, <span className="font-bold text-[#891c1c]">{user?.username}</span> — {cookingMessage}
       </h2>
 
-      {/* Interface principale */}
-      <div className="grid grid-cols-2 gap-6">
-        {/* Sélection de client */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-10 text-base sm:text-lg px-4">
         <div className="flex flex-col items-center">
+          <label htmlFor="client-select" className="sr-only">Select a client</label>
           <select
             id="client-select"
             value={selectedClientId}
             onChange={(e) => setSelectedClientId(e.target.value)}
-            className="mb-2 px-4 py-1 rounded-full bg-[#ffe4b3] text-[#5a3a00] outline-none text-center"
+            className="mb-3 px-6 py-2 rounded-full bg-[#ffe4b3] text-[#5a3a00] outline-none text-center"
           >
-            <option value="">-- Select a name --</option>
+            <option value="">-- Name --</option>
             {Array.isArray(clients) && clients.map((client) => (
               <option key={client.id} value={client.id}>
                 {client.firstName} {client.lastName}
@@ -96,48 +112,50 @@ function CentralKitchen() {
               if (selectedClientId) navigate(`/clients/${selectedClientId}`);
             }}
             disabled={!selectedClientId}
-            className={`px-6 py-1.5 rounded-full text-white transition ${
+            className={`px-8 py-2 rounded-full text-white transition ${
               selectedClientId
                 ? 'bg-[#f85e00] hover:bg-[#d24a00]'
                 : 'bg-[#f85e00] cursor-not-allowed'
             }`}
+            aria-disabled={!selectedClientId}
           >
             View profile
           </button>
         </div>
 
-        {/* Accès au QR code */}
-<div className="flex flex-col items-center">
-  <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">QR Code</div>
-  <button
-    onClick={() => navigate('/qr-code')}
-    className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition"
-  >
-    Voir
-  </button>
-</div>
-
-
-        {/* Inventaire */}
         <div className="flex flex-col items-center">
-          <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">Box Inventory</div>
-          <button className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition">
+          <div className="bg-[#ffe4b3] py-2 px-6 rounded-full mb-2" id="qr-label">QR Code</div>
+          <button
+            onClick={() => navigate('/qr-code')}
+            className="bg-[#f85e00] text-white px-8 py-2 rounded-full hover:bg-[#d24a00] transition"
+            aria-labelledby="qr-label"
+          >
+            Voir
+          </button>
+        </div>
+
+        <div className="flex flex-col items-center">
+          <div className="bg-[#ffe4b3] py-2 px-6 rounded-full mb-2" id="inventory-label">Box Inventory</div>
+          <button
+            className="bg-[#f85e00] text-white px-8 py-2 rounded-full hover:bg-[#d24a00] transition"
+            aria-labelledby="inventory-label"
+          >
             See
           </button>
         </div>
 
-        {/* Ajouter un client */}
         <div className="flex flex-col items-center">
-          <div className="bg-[#ffe4b3] py-1 px-4 rounded-full mb-1">Add a client</div>
+          <div className="bg-[#ffe4b3] py-2 px-6 rounded-full mb-2" id="add-client-label">Add a client</div>
           <button
             onClick={() => navigate('/add-client')}
-            className="bg-[#f85e00] text-white px-6 py-1.5 rounded-full hover:bg-[#d24a00] transition"
+            className="bg-[#f85e00] text-white px-8 py-2 rounded-full hover:bg-[#d24a00] transition"
+            aria-labelledby="add-client-label"
           >
             Yeah
           </button>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
 
