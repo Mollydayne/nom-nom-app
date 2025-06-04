@@ -17,7 +17,7 @@ function AboutPage() {
         <section className="flex flex-col md:flex-row items-center gap-10">
           {/* Photo */}
           <img
-            src="/public/molly.jpg"
+            src="/molly.jpg"
             alt="Portrait de Molly, créatrice de NomNom"
             className="w-48 h-48 rounded-full object-cover border-4 border-[#f85e00] shadow-md"
           />

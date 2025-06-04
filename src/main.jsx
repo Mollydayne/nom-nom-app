@@ -27,6 +27,7 @@ import AboutPage from './pages/AboutPage';
 import QRCodePage from './pages/QRCodePage.jsx';
 import QRCodePrintPage from './pages/QRCodePrintPage';
 import ClientSettings from './pages/ClientSettings';
+import SelectChef from './pages/SelectChef';
 
 
 import './index.css';
@@ -52,6 +53,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/qr-code" element={<QRCodePage />} />
         <Route path="/qr-print/:token" element={<QRCodePrintPage />} />
         <Route path="/client-settings" element={<ClientSettings />} />
+        <Route path="/select-chef" element={<SelectChef />} />
 
 
 

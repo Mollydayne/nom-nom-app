@@ -8,10 +8,10 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 // ---------------------------
-// Route d'inscription avec liaison à une fiche client existante
+// Route d'inscription
 // ---------------------------
 router.post('/register', async (req, res) => {
-  const { firstname, lastname, email, motDePasse, role } = req.body;
+  const { firstname, lastname, email, motDePasse, role, chefId } = req.body;
 
   if (!firstname || !lastname || !email || !motDePasse)
     return res.status(400).json({ error: 'Champs requis manquants' });
@@ -32,27 +32,42 @@ router.post('/register', async (req, res) => {
         const newUserId = this.lastID;
 
         if (userRole === 'client') {
-          db.get(
-            `SELECT id FROM clients WHERE email = ? AND user_id IS NULL`,
-            [normalizedEmail],
-            (err, clientRow) => {
-              if (err) {
-                console.error("Erreur recherche fiche client :", err.message);
-              } else if (clientRow) {
-                db.run(
-                  `UPDATE clients SET user_id = ? WHERE id = ?`,
-                  [newUserId, clientRow.id],
-                  (err) => {
-                    if (err) {
-                      console.error("Erreur liaison user/client :", err.message);
-                    } else {
-                      console.log("Fiche client liée à l'utilisateur.");
-                    }
-                  }
-                );
+          if (chefId) {
+            db.run(
+              `INSERT INTO clients (firstName, lastName, email, chef_id, user_id)
+               VALUES (?, ?, ?, ?, ?)`,
+              [firstname, lastname, normalizedEmail, chefId, newUserId],
+              (err) => {
+                if (err) {
+                  console.error("Erreur création fiche client :", err.message);
+                } else {
+                  console.log("Fiche client créée et liée au traiteur.");
+                }
               }
-            }
-          );
+            );
+          } else {
+            db.get(
+              `SELECT id FROM clients WHERE email = ? AND user_id IS NULL`,
+              [normalizedEmail],
+              (err, clientRow) => {
+                if (err) {
+                  console.error("Erreur recherche fiche client :", err.message);
+                } else if (clientRow) {
+                  db.run(
+                    `UPDATE clients SET user_id = ? WHERE id = ?`,
+                    [newUserId, clientRow.id],
+                    (err) => {
+                      if (err) {
+                        console.error("Erreur liaison user/client :", err.message);
+                      } else {
+                        console.log("Fiche client existante liée.");
+                      }
+                    }
+                  );
+                }
+              }
+            );
+          }
         }
 
         const transporter = nodemailer.createTransport({
@@ -92,6 +107,28 @@ router.post('/register', async (req, res) => {
             console.error("Erreur envoi email de bienvenue :", err);
           }
 
+          // Envoi mail à l’admin pour notification
+          const adminMailOptions = {
+            from: `"NomNom App" <${process.env.SMTP_USER}>`,
+            to: 'nomnom.appli@gmail.com',
+            subject: `Nouvelle inscription : ${firstname} ${lastname}`,
+            text: `Nouvel utilisateur inscrit :
+
+Nom : ${firstname} ${lastname}
+Email : ${normalizedEmail}
+Rôle : ${userRole}
+${userRole === 'client' && chefId ? `Chef assigné : ID ${chefId}` : ''}
+            `
+          };
+
+          transporter.sendMail(adminMailOptions, (err) => {
+            if (err) {
+              console.error("Erreur envoi email à l’admin :", err);
+            } else {
+              console.log("Notification envoyée à l’admin NomNom.");
+            }
+          });
+
           res.status(201).json({
             message: 'Utilisateur inscrit avec succès',
             userId: newUserId,
@@ -103,6 +140,19 @@ router.post('/register', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Erreur lors du traitement du mot de passe' });
   }
+});
+
+// ---------------------------
+// Route pour récupérer les traiteurs
+// ---------------------------
+router.get('/chefs', (req, res) => {
+  db.all(`SELECT id, firstname, lastname, email FROM users WHERE role = 'traiteur'`, (err, rows) => {
+    if (err) {
+      console.error('Erreur récupération traiteurs :', err.message);
+      return res.status(500).json({ error: 'Erreur serveur' });
+    }
+    res.json(rows);
+  });
 });
 
 // ---------------------------
@@ -147,6 +197,34 @@ router.post('/login', (req, res) => {
     } catch (err) {
       res.status(500).json({ error: 'Login failed' });
     }
+  });
+});
+
+// ---------------------------
+// Route de delete de compte
+// ---------------------------
+
+const authenticateToken = require('../middleware/authenticateToken');
+
+router.delete('/me', authenticateToken, (req, res) => {
+  const userId = req.user.id;
+
+  db.serialize(() => {
+    db.run(`DELETE FROM clients WHERE user_id = ?`, [userId], function (err) {
+      if (err) {
+        console.error("Erreur suppression fiche client :", err.message);
+        return res.status(500).json({ error: "Erreur suppression fiche client" });
+      }
+
+      db.run(`DELETE FROM users WHERE id = ?`, [userId], function (err) {
+        if (err) {
+          console.error("Erreur suppression utilisateur :", err.message);
+          return res.status(500).json({ error: "Erreur suppression compte utilisateur" });
+        }
+
+        res.json({ message: "Compte supprimé avec succès" });
+      });
+    });
   });
 });
 
