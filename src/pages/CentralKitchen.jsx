@@ -23,7 +23,7 @@ function CentralKitchen() {
   // Modification : on utilise apiFetch pour centraliser l'appel à l'API
   const fetchClients = async () => {
     try {
-      const data = await apiFetch('/api/clients');
+      const data = await apiFetch('/clients');
       setClients(data);
     } catch (err) {
       console.error('Erreur chargement clients :', err);
