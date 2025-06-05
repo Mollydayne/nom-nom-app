@@ -1,13 +1,14 @@
 // SignupPage.jsx
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { apiFetch } from '../api'; // Import du fetch centralisé
 import BentoDecoration from '../components/BentoDecoration';
 import TopRightCircle from '../components/TopRightCircle';
 
 function SignupPage() {
   const navigate = useNavigate();
   const [chefs, setChefs] = useState([]);
-  const API_URL = import.meta.env.VITE_API_URL;
+  const [error, setError] = useState('');
 
   const [form, setForm] = useState({
     firstname: '',
@@ -18,35 +19,30 @@ function SignupPage() {
     chefId: '',
   });
 
-  const [error, setError] = useState('');
-
+  // Au chargement, on va chercher la liste des traiteurs
   useEffect(() => {
-    fetch(`${API_URL}/api/users/chefs`)
-      .then(res => res.json())
+    apiFetch('/api/users/chefs')
       .then(data => setChefs(data))
       .catch(err => console.error('Erreur chargement traiteurs :', err));
-  }, [API_URL]);
+  }, []);
 
+  // Gestion des changements dans les champs du formulaire
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   };
 
+  // Lors de la soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const res = await fetch(`${API_URL}/api/users/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
+    try {
+      await apiFetch('/api/users/register', {
+        method: 'POST',
+        body: JSON.stringify(form),
+      });
       navigate('/login');
-    } else {
-      setError(data.error || "Erreur à l’inscription");
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -61,11 +57,8 @@ function SignupPage() {
 
       <form onSubmit={handleSubmit} className="flex flex-col items-center w-full max-w-sm">
         <input type="text" name="firstname" placeholder="Prénom" value={form.firstname} onChange={handleChange} required className="mb-4 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] w-full outline-none" />
-
         <input type="text" name="lastname" placeholder="Nom" value={form.lastname} onChange={handleChange} required className="mb-4 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] w-full outline-none" />
-
         <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} required className="mb-4 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] w-full outline-none" />
-
         <input type="password" name="motDePasse" placeholder="Mot de passe" value={form.motDePasse} onChange={handleChange} required className="mb-4 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] w-full outline-none" />
 
         <select name="role" value={form.role} onChange={handleChange} className="mb-4 px-6 py-2 rounded-full bg-[#ffe4b3] text-center text-[#5a3a00] w-full outline-none cursor-pointer">
@@ -73,6 +66,7 @@ function SignupPage() {
           <option value="traiteur">Je suis traiteur</option>
         </select>
 
+        {/* Sélection du traiteur uniquement pour les clients */}
         {form.role === 'client' && (
           <select name="chefId" value={form.chefId} onChange={handleChange} className="mb-6 px-6 py-2 rounded-full bg-[#fff0cc] text-center text-[#5a3a00] w-full outline-none cursor-pointer">
             <option value="">-- Choisis ton traiteur --</option>

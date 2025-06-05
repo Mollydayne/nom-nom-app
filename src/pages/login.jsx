@@ -4,6 +4,7 @@ import BentoDecoration from '../components/BentoDecoration';
 import Toast from '../components/Toast';
 import LogoutBadge from '../components/LogoutBadge';
 import TopRightCircle from '../components/TopRightCircle';
+import { apiFetch } from '../api'; //adapte le chemin si nécessaire
 
 function Login() {
   const [form, setForm] = useState({
@@ -34,15 +35,12 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch('http://localhost:3001/api/users/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
+    try {
+      const data = await apiFetch('/api/users/login', {
+        method: 'POST',
+        body: JSON.stringify(form),
+      });
 
-    const data = await res.json();
-
-    if (res.ok) {
       const role = data.user.role;
 
       // Sauvegarde dans le localStorage
@@ -58,22 +56,20 @@ function Login() {
       } else {
         navigate('/unauthorized');
       }
-    } else {
-      setError(data.error || 'Erreur de connexion');
+    } catch (err) {
+      setError(err.message || 'Erreur de connexion');
     }
   };
 
   return (
     <div className="min-h-screen bg-[#ffb563] flex flex-col items-center justify-center font-zenloop px-4 relative text-[#5a3a00]">
-      {/* Image décorative en haut à gauche */}
       <BentoDecoration />
       <TopRightCircle />
-      {/* Titre de la page */}
+
       <h1 className="text-5xl sm:text-6xl md:text-7xl text-[#891c1c] mb-8 leading-none">
         Welcome back !
       </h1>
 
-      {/* Formulaire de connexion */}
       <form onSubmit={handleSubmit} className="flex flex-col items-center w-full max-w-sm">
         <input
           type="email"
@@ -106,11 +102,9 @@ function Login() {
           Mot de passe oublié ?
         </Link>
 
-        {/* Message d'erreur si connexion échouée */}
         {error && <p className="mt-4 text-red-700">{error}</p>}
       </form>
 
-      {/* Lien vers la page d'inscription */}
       <p className="mt-6 text-[#5a3a00] text-lg">
         Pas encore de compte dans notre fantastique app ?
         <Link to="/" className="hover:text-[#891c1c] transition ml-1">
@@ -118,7 +112,6 @@ function Login() {
         </Link>
       </p>
 
-      {/* Toast d'alerte si redirection depuis une route protégée */}
       {showRedirectToast && (
         <Toast
           message="Il faut être authentifié pour pouvoir accéder à cette page !"
