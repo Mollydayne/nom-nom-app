@@ -7,11 +7,27 @@ const cors = require('cors');
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Configuration CORS pour autoriser l'accès depuis le frontend local et le site en prod
+const allowedOrigins = [
+  'http://localhost:5173',           // pour le dev local (Vite)
+  'http://localhost:3000',           // pour le dev éventuel en React classique
+  'https://www.nom-nom.app'          // site frontend déployé
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
+
+// Middleware JSON
 app.use(express.json());
 
-// Routes de test
+// Route de base (accès à la racine de l'API)
+app.get('/', (req, res) => {
+  res.send('Bonjour patate');
+});
+
+// Route de test ping
 app.get('/api/ping', (req, res) => {
   res.json({ message: 'Pong depuis le backend' });
 });
@@ -29,8 +45,8 @@ app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/preferences', preferenceRoutes);
 app.use('/api/qr', qrRoutes);
 
-// Exposer le dossier qrcodes
+// Exposer le dossier contenant les QR codes générés
 app.use('/qrcodes', express.static(__dirname + '/qrcodes'));
 
-// Export uniquement l'app pour les tests
+// Export uniquement l'app pour pouvoir le lancer dans index.js ou le tester
 module.exports = app;
