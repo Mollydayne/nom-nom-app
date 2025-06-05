@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import BentoDecoration from '../components/BentoDecoration';
 import Toast from '../components/Toast';
+import { apiFetch } from '../api'; // Import du helper centralisé pour les requêtes
 
 function EditClient() {
   const { id } = useParams();
@@ -18,19 +19,9 @@ function EditClient() {
   const [error, setError] = useState('');
   const [showToast, setShowToast] = useState(false);
 
-  // Charge les données existantes du client à l'ouverture de la page
+  // Chargement des données du client via apiFetch (remplace fetch direct)
   useEffect(() => {
-    const token = localStorage.getItem('token');
-
-    fetch(`http://localhost:3001/api/clients/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error('Erreur lors du chargement du client');
-        return res.json();
-      })
+    apiFetch(`/api/clients/${id}`)
       .then((data) => {
         setForm({
           firstName: data.firstName || '',
@@ -46,30 +37,21 @@ function EditClient() {
       });
   }, [id, navigate]);
 
-  // Met à jour les champs du formulaire
+  // Gestion du changement dans les champs du formulaire
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  // Envoie les modifications au backend
+  // Soumission du formulaire via apiFetch
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    const token = localStorage.getItem('token');
-
     try {
-      const res = await fetch(`http://localhost:3001/api/clients/${id}`, {
+      const data = await apiFetch(`/api/clients/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(form),
+        body: form,
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur lors de la mise à jour');
 
       setShowToast(true);
       setTimeout(() => {

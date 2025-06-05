@@ -2,6 +2,9 @@ import { useState } from 'react';
 import BentoDecoration from '../components/BentoDecoration';
 import TopRightCircle from '../components/TopRightCircle';
 
+// Import centralisé de l'utilitaire d'appel API
+import { apiFetch } from '../api';
+
 function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -11,14 +14,13 @@ function ForgotPassword() {
     e.preventDefault();
 
     try {
-      const res = await fetch('http://localhost:3001/api/users/forgot-password', {
+      // On remplace l'appel fetch local par apiFetch
+      const res = await apiFetch('/users/forgot-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: { email },
       });
 
-      const data = await res.json();
-      setMessage(data.message || 'Une erreur est survenue');
+      setMessage(res.message || 'Une erreur est survenue');
     } catch (error) {
       setMessage("Impossible d'envoyer la demande. Veuillez réessayer.");
     }

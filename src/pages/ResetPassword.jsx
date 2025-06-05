@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import BentoDecoration from '../components/BentoDecoration';
 import TopRightCircle from '../components/TopRightCircle';
+import { apiFetch } from '../api'; // Ajout de l'import pour la fonction centralisée
 
 function ResetPassword() {
   const { token } = useParams();
@@ -11,7 +12,7 @@ function ResetPassword() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  // Envoie le nouveau mot de passe au backend
+  // Utilisation de apiFetch à la place de fetch directement
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -20,19 +21,16 @@ function ResetPassword() {
       return;
     }
 
-    const res = await fetch(`http://localhost:3001/api/users/reset-password/${token}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ newPassword }),
-    });
+    try {
+      const data = await apiFetch(`/users/reset-password/${token}`, {
+        method: 'POST',
+        body: { newPassword },
+      });
 
-    const data = await res.json();
-
-    if (res.ok) {
       setMessage("Mot de passe modifié avec succès. Redirection en cours...");
       setTimeout(() => navigate('/login'), 3000);
-    } else {
-      setError(data.message || "Une erreur est survenue");
+    } catch (err) {
+      setError(err.message || "Une erreur est survenue");
     }
   };
 

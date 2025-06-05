@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import BentoDecoration from '../components/BentoDecoration';
 import Toast from '../components/Toast';
+// On importe apiFetch pour centraliser les appels API
+import { apiFetch } from '../api';
 
 function ClientProfile() {
   const { id } = useParams();
@@ -10,25 +12,15 @@ function ClientProfile() {
   const [finalToast, setFinalToast] = useState(null);
   const navigate = useNavigate();
 
-useEffect(() => {
-  const token = localStorage.getItem('token');
-
-  fetch(`http://localhost:3001/api/clients/${id}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((res) => {
-      if (!res.ok) throw new Error('Erreur lors du chargement');
-      return res.json();
-    })
-    .then((data) => setClient(data))
-    .catch((err) => {
-      console.error('Erreur client :', err);
-      navigate('/central-kitchen');
-    });
-}, [id, navigate]);
-
+  useEffect(() => {
+    // On remplace le fetch classique par apiFetch
+    apiFetch(`/api/clients/${id}`)
+      .then((data) => setClient(data))
+      .catch((err) => {
+        console.error('Erreur client :', err);
+        navigate('/central-kitchen');
+      });
+  }, [id, navigate]);
 
   const confirmDelete = () => {
     setShowConfirmToast(true);
@@ -40,36 +32,25 @@ useEffect(() => {
     setTimeout(() => setFinalToast(null), 2000);
   };
 
-const proceedDelete = async () => {
-  setShowConfirmToast(false);
+  const proceedDelete = async () => {
+    setShowConfirmToast(false);
 
-  const token = localStorage.getItem('token');
-  console.log('Token utilisé pour suppression :', token); // Debug
+    try {
+      // Suppression centralisée via apiFetch
+      await apiFetch(`/api/clients/${client.id}`, {
+        method: 'DELETE',
+      });
 
-  try {
-    const res = await fetch(`http://localhost:3001/api/clients/${client.id}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || 'Error deleting client');
+      setFinalToast('deleted');
+      setTimeout(() => {
+        setFinalToast(null);
+        navigate('/central-kitchen');
+      }, 2000);
+    } catch (err) {
+      console.error('Erreur suppression client :', err.message);
+      alert('Could not delete client');
     }
-
-    setFinalToast('deleted');
-    setTimeout(() => {
-      setFinalToast(null);
-      navigate('/central-kitchen');
-    }, 2000);
-  } catch (err) {
-    console.error('Erreur suppression client :', err.message);
-    alert('Could not delete client');
-  }
-};
-
+  };
 
   if (!client) return <p className="text-center mt-10">Loading client profile...</p>;
 
@@ -88,7 +69,6 @@ const proceedDelete = async () => {
         <p><strong>Aime :</strong> {client.likes || 'Non renseigné'}</p>
       </div>
 
-      {/* Boutons d'action alignés */}
       <div className="flex flex-wrap justify-center gap-4 mt-6">
         <button
           onClick={() => navigate('/central-kitchen')}
@@ -104,17 +84,14 @@ const proceedDelete = async () => {
           Modifier
         </button>
 
-       <button
-  onClick={confirmDelete}
-  className="px-6 py-2 bg-[#891c1c] text-white rounded-full hover:bg-[#5e1212] transition shake-on-hover"
->
-  Supprimer
-</button>
-
-
+        <button
+          onClick={confirmDelete}
+          className="px-6 py-2 bg-[#891c1c] text-white rounded-full hover:bg-[#5e1212] transition shake-on-hover"
+        >
+          Supprimer
+        </button>
       </div>
 
-      {/* Toast de confirmation avec boutons Oui / Non */}
       {showConfirmToast && (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-red-700 text-white px-6 py-4 rounded-xl shadow-xl z-50 text-center w-[90%] max-w-md">
           <p className="mb-2 text-lg font-medium">Attention ! Tu es sur le point de supprimer un client.</p>
@@ -135,7 +112,6 @@ const proceedDelete = async () => {
         </div>
       )}
 
-      {/* Toast final selon l'action */}
       {finalToast === 'deleted' && (
         <Toast
           message={`Profil de ${client.firstName} ${client.lastName} supprimé !`}

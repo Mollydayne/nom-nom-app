@@ -4,7 +4,8 @@ import BentoDecoration from '../components/BentoDecoration';
 import Toast from '../components/Toast';
 import { useNavigate } from 'react-router-dom';
 import ReturnToKitchen from '../components/ReturnToKitchen';
-
+// Nouveau : import centralisé des requêtes
+import { apiFetch } from '../api';
 
 function QRCodePage() {
   const [scanResult, setScanResult] = useState(null);
@@ -17,18 +18,14 @@ function QRCodePage() {
   const [selectedClientId, setSelectedClientId] = useState('');
   const [quantity, setQuantity] = useState('');
 
-  const token = localStorage.getItem('token');
   const navigate = useNavigate();
 
-  // Chargement des clients à l'arrivée sur la page
+  // Mise à jour : chargement des clients via apiFetch
   useEffect(() => {
-    fetch('http://localhost:3001/api/clients', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((res) => res.json())
-      .then((data) => setClients(data))
-      .catch((err) => console.error('Erreur chargement clients :', err));
-  }, [token]);
+    apiFetch('/clients')
+      .then(data => setClients(data))
+      .catch(err => console.error('Erreur chargement clients :', err));
+  }, []);
 
   // Initialisation du scanner QR
   useEffect(() => {
@@ -39,8 +36,9 @@ function QRCodePage() {
         scanner.clear().then(() => {
           const token = decodedText.split('/').pop();
           setQrToken(token);
-          fetch(`http://localhost:3001/api/qr/${token}`)
-            .then((res) => res.json())
+
+          // Mise à jour : appel à apiFetch pour récupérer les infos du QR scanné
+          apiFetch(`/qr/${token}`)
             .then((data) => {
               setScanResult(data);
               fetchDeliveryHistory(token);
@@ -55,8 +53,8 @@ function QRCodePage() {
   }, []);
 
   const fetchDeliveryHistory = (token) => {
-    fetch(`http://localhost:3001/api/boxes/${token}/deliveries`)
-      .then((res) => res.json())
+    // Mise à jour : appel à apiFetch pour récupérer l’historique de livraison
+    apiFetch(`/boxes/${token}/deliveries`)
       .then((data) => setDeliveryHistory(data))
       .catch((err) => {
         console.error('Erreur historique :', err);
@@ -71,21 +69,17 @@ function QRCodePage() {
 
     const today = new Date().toISOString().split("T")[0];
 
-    fetch('http://localhost:3001/api/deliveries', {
+    // Mise à jour : envoi via apiFetch
+    apiFetch('/deliveries', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
+      body: {
         client_id: scanResult.client_id,
         quantity: 1,
         date: today,
         reuse_qr_token: qrToken
-      })
+      }
     })
-      .then(res => res.json())
-      .then(data => {
+      .then(() => {
         setToast({ type: 'success', message: 'Nouvelle livraison créée avec succès !' });
         setScanResult(null);
         setDeliveryHistory([]);
@@ -104,19 +98,15 @@ function QRCodePage() {
   const handleCreateQRCode = () => {
     const today = new Date().toISOString().split("T")[0];
 
-    fetch('http://localhost:3001/api/deliveries', {
+    // Mise à jour : envoi via apiFetch
+    apiFetch('/deliveries', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({
+      body: {
         client_id: selectedClientId,
         quantity,
         date: today
-      })
+      }
     })
-      .then(res => res.json())
       .then(data => {
         setToast({ type: 'success', message: 'QR code généré avec succès !' });
         setQrToken(data.qr_token);
@@ -129,13 +119,13 @@ function QRCodePage() {
   };
 
   return (
+    // Rendu inchangé
     <div className="min-h-screen bg-[#ffb563] px-4 pt-12 text-[#891c1c] flex flex-col items-center font-zenloop">
       <BentoDecoration />
       <ReturnToKitchen position="top-left" />
 
       <h1 className="text-5xl mb-6">Gestion des QR code</h1>
 
-      {/* Formulaire de création */}
       <div className="bg-white rounded-xl shadow-lg p-4 mb-6 w-full max-w-md text-[#5a3a00]">
         <h2 className="text-xl font-semibold mb-3">Créer un nouveau QR code</h2>
         <select
@@ -150,14 +140,14 @@ function QRCodePage() {
             </option>
           ))}
         </select>
-       <input
-  type="number"
-  min={1}
-  value={quantity}
-  onChange={(e) => setQuantity(e.target.value)}
-  className="w-full mb-3 px-4 py-2 rounded-full bg-[#fff7e6] outline-none text-center placeholder:text-[#918450]"
-  placeholder="Quantité"
-/>
+        <input
+          type="number"
+          min={1}
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value)}
+          className="w-full mb-3 px-4 py-2 rounded-full bg-[#fff7e6] outline-none text-center placeholder:text-[#918450]"
+          placeholder="Quantité"
+        />
 
         <button
           onClick={handleCreateQRCode}

@@ -1,8 +1,13 @@
+// QRCodePrintPage.jsx
 import { useParams } from 'react-router-dom';
+
+// On utilise l'URL de l'API définie dans les variables d'environnement
+const API_BASE = import.meta.env.VITE_API_URL;
 
 function QRCodePrintPage() {
   const { token } = useParams();
-  const imageUrl = `http://localhost:3001/qrcodes/${token}.png`;
+  // On remplace localhost:3001 par l’URL dynamique de l’API
+  const imageUrl = `${API_BASE}/qrcodes/${token}.png`;
 
   return (
     <div

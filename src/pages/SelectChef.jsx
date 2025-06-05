@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+// Import de la fonction centralisée pour les appels API
+import { apiFetch } from '../api';
 
 export default function SelectChef() {
   const [chefs, setChefs] = useState([]);
@@ -7,15 +9,14 @@ export default function SelectChef() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/users/chefs')
-      .then(res => res.json())
+    // Remplacement de fetch direct par apiFetch
+    apiFetch('/api/users/chefs')
       .then(data => setChefs(data))
       .catch(err => console.error('Erreur chargement traiteurs :', err));
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
 
     const body = {
@@ -25,21 +26,18 @@ export default function SelectChef() {
       chef_id: selectedChefId,
     };
 
-    const res = await fetch('http://localhost:3001/api/clients', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify(body),
-    });
+    try {
+      // Remplacement du fetch direct par apiFetch avec méthode POST
+      await apiFetch('/api/clients', {
+        method: 'POST',
+        body,
+        auth: true,
+      });
 
-    if (res.ok) {
       alert('Ton traiteur a bien été enregistré 🍱');
       navigate('/client-dashboard');
-    } else {
-      const data = await res.json();
-      alert(data.error || 'Une erreur est survenue');
+    } catch (err) {
+      alert(err.message || 'Une erreur est survenue');
     }
   };
 
@@ -71,4 +69,3 @@ export default function SelectChef() {
     </div>
   );
 }
-

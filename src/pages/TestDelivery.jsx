@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import BentoDecoration from '../components/BentoDecoration';
 import TopRightCircle from '../components/TopRightCircle';
+import { apiFetch } from '../api'; // Import de la fonction centralisée apiFetch
 
 function TestDelivery() {
   const [form, setForm] = useState({
@@ -21,21 +22,16 @@ function TestDelivery() {
     e.preventDefault();
 
     try {
-      const res = await fetch('http://localhost:3001/api/deliveries', {
+      // Utilisation de apiFetch à la place de fetch
+      const res = await apiFetch('/deliveries', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: form,
       });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setMessage(`Livraison enregistrée ! ID : ${data.deliveryId}`);
-      } else {
-        setMessage(`Erreur : ${data.message}`);
-      }
+      // Gestion de la réponse
+      setMessage(`Livraison enregistrée ! ID : ${res.deliveryId}`);
     } catch (error) {
-      setMessage('Erreur réseau');
+      setMessage('Erreur réseau ou serveur');
       console.error(error);
     }
   };

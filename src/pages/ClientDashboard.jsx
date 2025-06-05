@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BentoDecoration from '../components/BentoDecoration';
 import LogoutBadge from '../components/LogoutBadge';
 import Toast from '../components/Toast';
+import { apiFetch } from '../api';
 
 export default function ClientDashboard() {
   const [clientData, setClientData] = useState(null);
@@ -15,8 +16,8 @@ export default function ClientDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/users/chefs')
-      .then(res => res.json())
+    // Remplacement de fetch direct par apiFetch
+    apiFetch('/api/users/chefs')
       .then(data => setChefs(data))
       .catch(err => console.error('Erreur chargement traiteurs :', err));
   }, []);
@@ -24,15 +25,10 @@ export default function ClientDashboard() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    fetch("http://localhost:3001/api/clients/client-dashboard", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    // Remplacement par apiFetch avec ajout des headers
+    apiFetch('/api/clients/client-dashboard', {
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Erreur de chargement");
-        return res.json();
-      })
       .then((data) => setClientData(data))
       .catch((err) => {
         console.error("Erreur client dashboard :", err);
@@ -44,17 +40,15 @@ export default function ClientDashboard() {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch('http://localhost:3001/api/clients/select-chef', {
+      // Utilisation de apiFetch avec POST
+      const updatedClient = await apiFetch('/api/clients/select-chef', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ chefId: selectedChefId }),
       });
 
-      if (!res.ok) throw new Error("Erreur lors de l’enregistrement du traiteur");
-      const updatedClient = await res.json();
       setClientData(updatedClient);
       setHasClientProfile(true);
     } catch (err) {
@@ -66,18 +60,14 @@ export default function ClientDashboard() {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch(`http://localhost:3001/api/preferences/${preferenceId}`, {
+      // Utilisation de apiFetch pour PATCH
+      const updatedPref = await apiFetch(`/api/preferences/${preferenceId}`, {
         method: "PATCH",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ liked: likedValue }),
       });
-
-      if (!res.ok) throw new Error("Erreur lors de la mise à jour");
-
-      const updatedPref = await res.json();
 
       setClientData((prev) => ({
         ...prev,
@@ -102,14 +92,13 @@ export default function ClientDashboard() {
     const token = localStorage.getItem('token');
 
     try {
-      const res = await fetch('http://localhost:3001/api/users/me', {
+      // Suppression de compte avec apiFetch
+      await apiFetch('/api/users/me', {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      if (!res.ok) throw new Error('Erreur suppression');
 
       setFinalToast('deleted');
       setTimeout(() => {

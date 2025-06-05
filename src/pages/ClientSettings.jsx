@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { apiFetch } from '../api'; // Import de notre fonction centralisée
 
 export default function ClientSettings() {
   const token = localStorage.getItem('token');
@@ -6,11 +7,9 @@ export default function ClientSettings() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/clients/me', {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setClient(data))
+    // Remplacement de fetch direct par apiFetch
+    apiFetch('/api/clients/me', { token })
+      .then(setClient)
       .catch(() => setMessage('Erreur de chargement des informations.'));
   }, [token]);
 
@@ -19,17 +18,17 @@ export default function ClientSettings() {
   };
 
   const handleSave = async () => {
-    const res = await fetch(`http://localhost:3001/api/clients/${client.id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(client),
-    });
-
-    const data = await res.json();
-    setMessage(res.ok ? 'Modifications enregistrées' : (data.error || 'Erreur'));
+    // Remplacement de fetch PUT par apiFetch
+    try {
+      const data = await apiFetch(`/api/clients/${client.id}`, {
+        token,
+        method: 'PUT',
+        body: client,
+      });
+      setMessage('Modifications enregistrées');
+    } catch (err) {
+      setMessage(err.message || 'Erreur');
+    }
   };
 
   if (!client) {
