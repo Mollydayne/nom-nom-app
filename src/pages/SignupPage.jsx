@@ -7,6 +7,7 @@ import TopRightCircle from '../components/TopRightCircle';
 function SignupPage() {
   const navigate = useNavigate();
   const [chefs, setChefs] = useState([]);
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const [form, setForm] = useState({
     firstname: '',
@@ -14,17 +15,17 @@ function SignupPage() {
     email: '',
     motDePasse: '',
     role: 'client',
-    chefId: '', // 🆕 champ ajouté
+    chefId: '',
   });
 
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/users/chefs')
+    fetch(`${API_URL}/api/users/chefs`)
       .then(res => res.json())
       .then(data => setChefs(data))
       .catch(err => console.error('Erreur chargement traiteurs :', err));
-  }, []);
+  }, [API_URL]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -34,7 +35,7 @@ function SignupPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch('http://localhost:3001/api/users/register', {
+    const res = await fetch(`${API_URL}/api/users/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
@@ -59,7 +60,6 @@ function SignupPage() {
       </h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col items-center w-full max-w-sm">
-
         <input type="text" name="firstname" placeholder="Prénom" value={form.firstname} onChange={handleChange} required className="mb-4 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] w-full outline-none" />
 
         <input type="text" name="lastname" placeholder="Nom" value={form.lastname} onChange={handleChange} required className="mb-4 px-6 py-2 rounded-full bg-[#ffd29d] text-center text-[#5a3a00] w-full outline-none" />
@@ -73,7 +73,6 @@ function SignupPage() {
           <option value="traiteur">Je suis traiteur</option>
         </select>
 
-        {/* Menu déroulant pour choisir un traiteur */}
         {form.role === 'client' && (
           <select name="chefId" value={form.chefId} onChange={handleChange} className="mb-6 px-6 py-2 rounded-full bg-[#fff0cc] text-center text-[#5a3a00] w-full outline-none cursor-pointer">
             <option value="">-- Choisis ton traiteur --</option>
