@@ -242,6 +242,20 @@ router.delete('/:id', authenticateToken, (req, res) => {
   });
 });
 
+// =======================
+// GET - Tous les clients du traiteur connecté
+// =======================
+router.get('/', authenticateToken, (req, res) => {
+  const chefId = req.user.id;
 
+  db.all(`SELECT * FROM clients WHERE chef_id = ?`, [chefId], (err, rows) => {
+    if (err) {
+      console.error("Erreur récupération clients :", err.message);
+      return res.status(500).json({ error: "Erreur serveur" });
+    }
+
+    res.json(rows);
+  });
+});
 
 module.exports = router;
