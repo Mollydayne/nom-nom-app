@@ -24,7 +24,7 @@ import Unauthorized from './pages/Unauthorized.jsx';
 import TraiteurRoute from "./components/TraiteurRoute.jsx";
 import MentionsLegales from './pages/MentionsLegales.jsx';
 import AboutPage from './pages/AboutPage';
-import QRCodePageFixed from './pages/QRCodePageFixed.jsx';
+import QRCodePage from './pages/QRCodePageFixed.jsx';
 import QRCodePrintPage from './pages/QRCodePrintPage';
 import ClientSettings from './pages/ClientSettings';
 import SelectChef from './pages/SelectChef';
