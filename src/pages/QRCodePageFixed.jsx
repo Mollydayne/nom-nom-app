@@ -1,8 +1,9 @@
+import { useNavigate } from 'react-router-dom';
+console.log("QRCodePage loaded");
 import { useEffect, useState } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import BentoDecoration from '../components/BentoDecoration';
 import Toast from '../components/Toast';
-import { useNavigate } from 'react-router-dom';
 import ReturnToKitchen from '../components/ReturnToKitchen';
 // Nouveau : import centralisé des requêtes
 import { apiFetch } from '../api';
