@@ -23,7 +23,7 @@ function QRCodePage() {
 
   // Mise à jour : chargement des clients via apiFetch
   useEffect(() => {
-    apiFetch('/clients')
+    apiFetch('/api/clients')
       .then(data => setClients(data))
       .catch(err => console.error('Erreur chargement clients :', err));
   }, []);
