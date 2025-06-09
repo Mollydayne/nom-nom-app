@@ -44,6 +44,8 @@ const updateSchema = async () => {
   try {
     await addColumnIfNotExists('users', 'firstname', 'TEXT');
     await addColumnIfNotExists('users', 'lastname', 'TEXT');
+    await addColumnIfNotExists('deliveries', 'dish_name', 'TEXT');
+
     console.log('Mise à jour du schéma terminée !');
     db.close();
   } catch (err) {

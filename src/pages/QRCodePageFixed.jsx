@@ -5,7 +5,6 @@ import { Html5QrcodeScanner } from 'html5-qrcode';
 import BentoDecoration from '../components/BentoDecoration';
 import Toast from '../components/Toast';
 import ReturnToKitchen from '../components/ReturnToKitchen';
-// Nouveau : import centralisé des requêtes
 import { apiFetch } from '../api';
 
 function QRCodePage() {
@@ -18,10 +17,11 @@ function QRCodePage() {
   const [clients, setClients] = useState([]);
   const [selectedClientId, setSelectedClientId] = useState('');
   const [quantity, setQuantity] = useState('');
+  const [dishName, setDishName] = useState(''); // Champ pour le nom du plat
 
   const navigate = useNavigate();
 
-  // Mise à jour : chargement des clients via apiFetch
+  // Chargement des clients au chargement de la page
   useEffect(() => {
     apiFetch('/api/clients')
       .then(data => setClients(data))
@@ -38,7 +38,7 @@ function QRCodePage() {
           const token = decodedText.split('/').pop();
           setQrToken(token);
 
-          // Mise à jour : appel à apiFetch pour récupérer les infos du QR scanné
+          // Récupération des infos liées au QR code scanné
           apiFetch(`/qr/${token}`)
             .then((data) => {
               setScanResult(data);
@@ -53,8 +53,8 @@ function QRCodePage() {
     return () => scanner.clear().catch(() => {});
   }, []);
 
+  // Récupération de l'historique des livraisons associées à un QR token
   const fetchDeliveryHistory = (token) => {
-    // Mise à jour : appel à apiFetch pour récupérer l’historique de livraison
     apiFetch(`/boxes/${token}/deliveries`)
       .then((data) => setDeliveryHistory(data))
       .catch((err) => {
@@ -63,6 +63,7 @@ function QRCodePage() {
       });
   };
 
+  // Création d'une nouvelle livraison à partir d'un QR existant
   const handleReuseBox = () => {
     if (!scanResult?.client_id || !qrToken) {
       return setToast({ type: 'error', message: "Impossible de réutiliser ce QR" });
@@ -70,7 +71,6 @@ function QRCodePage() {
 
     const today = new Date().toISOString().split("T")[0];
 
-    // Mise à jour : envoi via apiFetch
     apiFetch('/deliveries', {
       method: 'POST',
       body: {
@@ -91,21 +91,23 @@ function QRCodePage() {
       });
   };
 
+  // Redirection vers la page d'impression du QR
   const handlePrint = () => {
     if (!qrToken) return;
     navigate(`/qr-print/${qrToken}`);
   };
 
+  // Création d'un nouveau QR code avec client, quantité, date et nom du plat
   const handleCreateQRCode = () => {
     const today = new Date().toISOString().split("T")[0];
 
-    // Mise à jour : envoi via apiFetch
     apiFetch('/deliveries', {
       method: 'POST',
       body: {
         client_id: selectedClientId,
         quantity,
-        date: today
+        date: today,
+        dish_name: dishName // Envoi du nom du plat
       }
     })
       .then(data => {
@@ -113,6 +115,7 @@ function QRCodePage() {
         setQrToken(data.qr_token);
         setScanResult({ message: data.message, delivery_id: data.deliveryId, client_id: selectedClientId });
         fetchDeliveryHistory(data.qr_token);
+        setDishName(''); // Réinitialisation du champ après envoi
       })
       .catch(() => {
         setToast({ type: 'error', message: 'Erreur lors de la génération du QR code.' });
@@ -120,7 +123,6 @@ function QRCodePage() {
   };
 
   return (
-    // Rendu inchangé
     <div className="min-h-screen bg-[#ffb563] px-4 pt-12 text-[#891c1c] flex flex-col items-center font-zenloop">
       <BentoDecoration />
       <ReturnToKitchen position="top-left" />
@@ -129,6 +131,8 @@ function QRCodePage() {
 
       <div className="bg-white rounded-xl shadow-lg p-4 mb-6 w-full max-w-md text-[#5a3a00]">
         <h2 className="text-xl font-semibold mb-3">Créer un nouveau QR code</h2>
+
+        {/* Sélection du client */}
         <select
           value={selectedClientId}
           onChange={(e) => setSelectedClientId(e.target.value)}
@@ -141,6 +145,8 @@ function QRCodePage() {
             </option>
           ))}
         </select>
+
+        {/* Saisie de la quantité */}
         <input
           type="number"
           min={1}
@@ -150,17 +156,29 @@ function QRCodePage() {
           placeholder="Quantité"
         />
 
+        {/* Saisie du nom du plat */}
+        <input
+          type="text"
+          value={dishName}
+          onChange={(e) => setDishName(e.target.value)}
+          className="w-full mb-3 px-4 py-2 rounded-full bg-[#fff7e6] outline-none text-center placeholder:text-[#918450]"
+          placeholder="Nom du plat"
+        />
+
+        {/* Bouton de création */}
         <button
           onClick={handleCreateQRCode}
-          disabled={!selectedClientId || quantity < 1}
+          disabled={!selectedClientId || quantity < 1 || !dishName}
           className="w-full bg-[#f85e00] text-white py-2 rounded-full hover:bg-[#d24a00] transition"
         >
           Créer un QR code
         </button>
       </div>
 
+      {/* Affichage du scanner */}
       <div id="reader" className="w-full max-w-md" />
 
+      {/* Affichage du résultat après scan */}
       {scanResult && (
         <div className="mt-6 bg-white text-[#5a3a00] rounded-xl p-4 shadow-lg max-w-md w-full">
           <h2 className="text-xl font-semibold mb-2">Résultat :</h2>
@@ -176,6 +194,7 @@ function QRCodePage() {
         </div>
       )}
 
+      {/* Affichage de l'historique des livraisons de cette boîte */}
       {deliveryHistory.length > 0 && (
         <div className="mt-6 max-w-md w-full bg-[#fff7e6] p-4 rounded-xl shadow">
           <h3 className="text-lg font-semibold mb-2">Historique de cette boîte :</h3>
@@ -189,12 +208,14 @@ function QRCodePage() {
         </div>
       )}
 
+      {/* Message d'erreur */}
       {error && (
         <div className="mt-6 bg-red-100 text-red-700 rounded-xl p-4 shadow max-w-md w-full">
           <p>{error}</p>
         </div>
       )}
 
+      {/* Affichage des toasts */}
       {toast && (
         <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />
       )}

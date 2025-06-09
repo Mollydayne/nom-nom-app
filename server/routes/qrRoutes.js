@@ -50,4 +50,27 @@ router.get('/:token', (req, res) => {
   );
 });
 
+// Route : historique des livraisons associées à un QR token
+router.get('/boxes/:qr_token/deliveries', (req, res) => {
+  const { qr_token } = req.params;
+
+  const query = `
+    SELECT deliveries.id, deliveries.date, deliveries.quantity, deliveries.returned, deliveries.dish_name,
+           users.firstName, users.lastName
+    FROM deliveries
+    JOIN users ON deliveries.sender_id = users.id
+    WHERE qr_token = ?
+    ORDER BY date DESC
+  `;
+
+  db.all(query, [qr_token], (err, rows) => {
+    if (err) {
+      console.error('Erreur récupération historique :', err.message);
+      return res.status(500).json({ error: 'Erreur serveur lors de la récupération de l’historique' });
+    }
+
+    return res.json(rows);
+  });
+});
+
 module.exports = router;
