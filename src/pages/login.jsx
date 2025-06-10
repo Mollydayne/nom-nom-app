@@ -38,7 +38,7 @@ function Login() {
     try {
       const data = await apiFetch('/api/users/login', {
         method: 'POST',
-        body: JSON.stringify(form),
+        body: form, // changement suite à la mise en place de api.js. Objet brut, pu de stringify ici
       });
 
       const role = data.user.role;
