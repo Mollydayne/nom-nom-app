@@ -2,7 +2,7 @@
 
 // On récupère l'URL de l'API depuis les variables d'environnement.
 // Cela permet d'utiliser automatiquement localhost en local et l'URL en production.
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = "https://nom-nom-app-production.up.railway.app";
 
 /**
  * Fonction utilitaire pour faire des requêtes vers l'API de manière centralisée.

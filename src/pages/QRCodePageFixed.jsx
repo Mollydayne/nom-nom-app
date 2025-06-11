@@ -71,7 +71,7 @@ function QRCodePage() {
 
     const today = new Date().toISOString().split("T")[0];
 
-    apiFetch('/deliveries', {
+    apiFetch('/api/deliveries', {
       method: 'POST',
       body: {
         client_id: scanResult.client_id,
@@ -101,7 +101,7 @@ function QRCodePage() {
   const handleCreateQRCode = () => {
     const today = new Date().toISOString().split("T")[0];
 
-    apiFetch('/deliveries', {
+    apiFetch('/api/deliveries', {
       method: 'POST',
       body: {
         client_id: selectedClientId,

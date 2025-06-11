@@ -1,51 +1,65 @@
 # 🍱 NomNom App
 
-Bienvenue dans **NomNom**, l'application qui révolutionne la gestion des livraions de repas dans des contenants consignés !
+Bienvenue dans **NomNom**, l'application qui révolutionne la gestion des livraisons de repas dans des contenants consignés !  
+Pensée avec soin pour les chefs privés et les traiteurs indépendants, NomNom facilite le suivi des commandes, des paiements et des retours de gamelles grâce à une interface intuitive et un système de QR codes intelligent.
 
-Conçue avec amour pour simplifier la vie des chefs privés et traiteurs passionnés, NomNom aide à suivre les commandes, les paiements et les retours de contenants avec efficacité et simplicité.
+👉 [Accéder à l'application](https://www.nom-nom.app/)
 
 ![Aperçu de l'application NomNom](images/NomNom1.png)
-
 
 ---
 
 ## 🚀 À propos
 
-NomNom est née d'un besoin simple : gérer facilement la vente de gamelles en gardant une trace claire des commandes, des paiements et des retours de contenants.
-Fini les oublis et les pertes de boîtes ! Grâce à cette application, tu peux :
+NomNom est née d’un besoin bien réel : gérer facilement la vente de gamelles faites maison, sans perdre de vue qui a quoi, combien il reste à payer et ce que chaque client aime ou n’aime pas manger.  
+L’application apporte une solution complète, connectée, et désormais **en ligne** 🎉
 
-- 📦 Suivre les commandes et les livraisons
-- 💰 Gérer les paiements en attente et les encaissements
-- 🔄 Suivre les retours de contenants
-- 📝 Noter les préférences alimentaires de tes clients
+Grâce à NomNom, tu peux désormais :
+
+- 📦 Gérer les livraisons de repas et suivre le statut de chaque gamelle
+- 💰 Suivre les paiements en attente et enregistrer les règlements
+- 🔁 Scanner les QR codes des contenants pour les assigner ou les récupérer
+- 🧾 Garder une trace de chaque interaction avec tes clients
+- 📬 Envoyer un mail de confirmation lors d'une livraison
+- 🌐 Travailler depuis n’importe où avec la version hébergée de l'application
 
 ---
 
 ## 🎯 Fonctionnalités principales
 
-- **QR Code magique** : Génère un QR code unique pour chaque commande, à coller sur les gamelles. Scanne-le lors de la livraison et du retour des contenants pour un suivi sans faille.
-- **Suivi des paiements** : Calcule automatiquement le montant dû par chaque client. Enregistre les paiements partiels ou complets en un clin d'œil.
-- **Fiche client détaillée** : Nom, nombre total de gamelles commandées, contenants en possession, solde dû, préférences alimentaires... tout est là !
-- **Historique des commandes** : Garde une trace de toutes les livraisons passées pour une meilleure organisation.
+- **QR Code réutilisable** : Chaque boîte possède un QR code qui permet de suivre son cycle de vie (livraison, retour, réutilisation). Fini les contenants perdus !
+- **Historique de chaque contenant** : Accède à tout l’historique des livraisons associées à un QR code donné.
+- **Impression facile** : Une page dédiée te permet d’imprimer un QR code proprement pour le coller sur tes contenants.
+- **Fiche client enrichie** :
+  - Nom, prénom, préférences et aversions alimentaires
+  - Nombre total de gamelles livrées
+  - Solde à régler
+  - Gamelles actuellement en sa possession
+- **Séparation traiteur / client** : Deux types de comptes avec des interfaces adaptées
+- **Interface responsive et accessible** : Compatible avec les besoins des daltoniens et des personnes malvoyantes (contrastes, textes alternatifs, navigation clavier)
+- **Connexion sécurisée** avec bcrypt et système de **routes protégées**
+- **Envoi automatique d’un e-mail récapitulatif** à chaque livraison enregistrée
+- **Toasts de confirmation élégants** pour les actions sensibles (suppression, validation, annulation…)
 
 ---
 
 ## 🛠️ Technologies utilisées
 
-- **Frontend** : React + Tailwind pour une interface rapide et réactive
-- **Backend** : Express JS pour la logique métier et les routes API
-- **Base de données** : SQLite pour stocker les informations clients et commandes
-
+- **Frontend** : React + Vite + Tailwind CSS
+- **Backend** : Express JS (Node.js)
+- **Base de données** : SQLite
+- **Authentification** : bcrypt + JWT
+- **Emailing** : Nodemailer
+- **QR Code** : `qrcode` (Node) pour la génération, `html5-qrcode` (JS) pour le scan
+- **Déploiement** : Vercel (frontend) + Railway (backend)
+- **Nom de domaine** : [www.nom-nom.app](https://www.nom-nom.app)
 
 ---
 
-## 📦 Installation
+## 🧑‍🍳 Pour qui ?
 
-1. **Clone le dépôt** :
+- Pour les **traiteurs indépendants** qui livrent des repas maison
+- Pour les **chefs privés** qui souhaitent un suivi simple et automatisé
+- Pour toute personne qui en a assez de se demander à qui elle a prêté sa dernière boîte
 
-   ```bash
-   git clone https://github.com/Mollydayne/nom-nom-app.git
-   cd nom-nom-app
-
-
-
+---
