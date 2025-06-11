@@ -10,8 +10,9 @@ const app = express();
 // Configuration CORS pour autoriser l'accès depuis le frontend local et le site en prod
 const allowedOrigins = [
   'http://localhost:5173',           // pour le dev local (Vite)
-  'http://localhost:3000',           // pour le dev éventuel en React classique
-  'https://www.nom-nom.app'          // site frontend déployé
+  'http://localhost:3000',        // pour le dev éventuel en React classique
+  'https://www.nom-nom.app',            
+  'https://nom-nom.app'          // site frontend déployé. màj : j'enlève www pour tenter de régler mon prblm de fetch
 ];
 
 app.use(cors({
