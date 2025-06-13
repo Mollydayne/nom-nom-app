@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-console.log("QRCodePage loaded");
 import { useEffect, useState } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import BentoDecoration from '../components/BentoDecoration';
@@ -17,18 +16,18 @@ function QRCodePage() {
   const [clients, setClients] = useState([]);
   const [selectedClientId, setSelectedClientId] = useState('');
   const [quantity, setQuantity] = useState('');
-  const [dishName, setDishName] = useState(''); // Champ pour le nom du plat
+  const [dishName, setDishName] = useState('');
 
   const navigate = useNavigate();
 
-  // Chargement des clients au chargement de la page
+  // Charger les clients disponibles
   useEffect(() => {
     apiFetch('/api/clients')
       .then(data => setClients(data))
       .catch(err => console.error('Erreur chargement clients :', err));
   }, []);
 
-  // Initialisation du scanner QR
+  // Initialiser le scanner QR au chargement de la page
   useEffect(() => {
     const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 }, false);
 
@@ -38,7 +37,7 @@ function QRCodePage() {
           const token = decodedText.split('/').pop();
           setQrToken(token);
 
-          // Récupération des infos liées au QR code scanné
+          // Récupérer les données de la livraison associée
           apiFetch(`/qr/${token}`)
             .then((data) => {
               setScanResult(data);
@@ -53,7 +52,7 @@ function QRCodePage() {
     return () => scanner.clear().catch(() => {});
   }, []);
 
-  // Récupération de l'historique des livraisons associées à un QR token
+  // Récupérer l'historique de la boîte liée à ce QR code
   const fetchDeliveryHistory = (token) => {
     apiFetch(`/boxes/${token}/deliveries`)
       .then((data) => setDeliveryHistory(data))
@@ -63,7 +62,7 @@ function QRCodePage() {
       });
   };
 
-  // Création d'une nouvelle livraison à partir d'un QR existant
+  // Réutiliser un QR code existant pour une nouvelle livraison
   const handleReuseBox = () => {
     if (!scanResult?.client_id || !qrToken) {
       return setToast({ type: 'error', message: "Impossible de réutiliser ce QR" });
@@ -91,13 +90,13 @@ function QRCodePage() {
       });
   };
 
-  // Redirection vers la page d'impression du QR
+  // Rediriger vers la page d'impression du QR code
   const handlePrint = () => {
     if (!qrToken) return;
     navigate(`/qr-print/${qrToken}`);
   };
 
-  // Création d'un nouveau QR code avec client, quantité, date et nom du plat
+  // Créer un nouveau QR code avec les infos saisies
   const handleCreateQRCode = () => {
     const today = new Date().toISOString().split("T")[0];
 
@@ -107,7 +106,7 @@ function QRCodePage() {
         client_id: selectedClientId,
         quantity,
         date: today,
-        dish_name: dishName // Envoi du nom du plat
+        dish_name: dishName
       }
     })
       .then(data => {
@@ -115,7 +114,7 @@ function QRCodePage() {
         setQrToken(data.qr_token);
         setScanResult({ message: data.message, delivery_id: data.deliveryId, client_id: selectedClientId });
         fetchDeliveryHistory(data.qr_token);
-        setDishName(''); // Réinitialisation du champ après envoi
+        setDishName('');
       })
       .catch(() => {
         setToast({ type: 'error', message: 'Erreur lors de la génération du QR code.' });
@@ -129,10 +128,18 @@ function QRCodePage() {
 
       <h1 className="text-5xl mb-6">Gestion des QR code</h1>
 
+      {/* Bouton pour accéder à l'historique global */}
+      <button
+        onClick={() => navigate('/qr-history')}
+        className="mb-6 bg-[#ffd29d] hover:bg-[#ffcc85] text-[#5a3a00] font-semibold py-2 px-4 rounded-full shadow transition-transform hover:scale-105"
+      >
+        Voir l’historique des QR codes
+      </button>
+
+      {/* Formulaire de création d’un nouveau QR code */}
       <div className="bg-white rounded-xl shadow-lg p-4 mb-6 w-full max-w-md text-[#5a3a00]">
         <h2 className="text-xl font-semibold mb-3">Créer un nouveau QR code</h2>
 
-        {/* Sélection du client */}
         <select
           value={selectedClientId}
           onChange={(e) => setSelectedClientId(e.target.value)}
@@ -146,7 +153,6 @@ function QRCodePage() {
           ))}
         </select>
 
-        {/* Saisie de la quantité */}
         <input
           type="number"
           min={1}
@@ -156,7 +162,6 @@ function QRCodePage() {
           placeholder="Quantité"
         />
 
-        {/* Saisie du nom du plat */}
         <input
           type="text"
           value={dishName}
@@ -165,7 +170,6 @@ function QRCodePage() {
           placeholder="Nom du plat"
         />
 
-        {/* Bouton de création */}
         <button
           onClick={handleCreateQRCode}
           disabled={!selectedClientId || quantity < 1 || !dishName}
@@ -175,10 +179,10 @@ function QRCodePage() {
         </button>
       </div>
 
-      {/* Affichage du scanner */}
+      {/* Scanner HTML5 */}
       <div id="reader" className="w-full max-w-md" />
 
-      {/* Affichage du résultat après scan */}
+      {/* Résultat du scan */}
       {scanResult && (
         <div className="mt-6 bg-white text-[#5a3a00] rounded-xl p-4 shadow-lg max-w-md w-full">
           <h2 className="text-xl font-semibold mb-2">Résultat :</h2>
@@ -194,7 +198,7 @@ function QRCodePage() {
         </div>
       )}
 
-      {/* Affichage de l'historique des livraisons de cette boîte */}
+      {/* Historique de la boîte */}
       {deliveryHistory.length > 0 && (
         <div className="mt-6 max-w-md w-full bg-[#fff7e6] p-4 rounded-xl shadow">
           <h3 className="text-lg font-semibold mb-2">Historique de cette boîte :</h3>
@@ -208,19 +212,31 @@ function QRCodePage() {
         </div>
       )}
 
-      {/* Message d'erreur */}
+      {/* Message d’erreur en cas de problème */}
       {error && (
         <div className="mt-6 bg-red-100 text-red-700 rounded-xl p-4 shadow max-w-md w-full">
           <p>{error}</p>
         </div>
       )}
 
-      {/* Affichage des toasts */}
+      {/* Toast de confirmation ou d'erreur */}
       {toast && (
         <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />
       )}
+
+      {/* Bouton retour à l'accueil traiteur */}
+<button
+  onClick={() => navigate('/central-kitchen')}
+  className="mt-12 mb-8 bg-[#f85e00] hover:bg-[#d24a00] text-white font-semibold py-2 px-6 rounded-full shadow transition-transform hover:scale-105"
+>
+  Retour à la cuisine centrale
+</button>
+
     </div>
   );
 }
+
+
+
 
 export default QRCodePage;

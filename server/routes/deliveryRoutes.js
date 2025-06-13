@@ -105,4 +105,31 @@ router.post('/', authenticateToken, (req, res) => {
   });
 });
 
+
+// Route : historique global des livraisons (QR codes générés)
+router.get('/history', authenticateToken, (req, res) => {
+  const query = `
+    SELECT deliveries.date, deliveries.dish_name, clients.prenom, clients.nom
+    FROM deliveries
+    JOIN clients ON deliveries.client_id = clients.id
+    ORDER BY deliveries.date DESC
+  `;
+
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      console.error('Erreur récupération historique :', err.message);
+      return res.status(500).json({ error: 'Erreur serveur' });
+    }
+
+    const formatted = rows.map(row => ({
+      date: row.date,
+      dish_name: row.dish_name,
+      client: `${row.prenom} ${row.nom}`
+    }));
+
+    res.json(formatted);
+  });
+});
+
+
 module.exports = router;
