@@ -38,7 +38,7 @@ function SignupPage() {
     try {
       await apiFetch('/api/users/register', {
         method: 'POST',
-        body: JSON.stringify(form),
+        body: form,
       });
       navigate('/login');
     } catch (err) {
