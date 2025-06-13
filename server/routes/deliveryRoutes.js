@@ -82,7 +82,7 @@ router.post('/', authenticateToken, (req, res) => {
 
   // Si on réutilise un QR code existant, on saute la génération d'image
   if (reuse_qr_token) {
-    console.log('♻️ Réutilisation de QR code');
+    console.log('Réutilisation de QR code');
     return proceed();
   }
 
@@ -105,13 +105,12 @@ router.post('/', authenticateToken, (req, res) => {
   });
 });
 
-
 // Route : historique global des livraisons (QR codes générés)
 router.get('/history', authenticateToken, (req, res) => {
   const query = `
-    SELECT deliveries.date, deliveries.dish_name, clients.prenom, clients.nom
+    SELECT deliveries.date, deliveries.dish_name, users.firstname AS prenom, users.lastname AS nom
     FROM deliveries
-    JOIN clients ON deliveries.client_id = clients.id
+    JOIN users ON deliveries.client_id = users.id
     ORDER BY deliveries.date DESC
   `;
 
@@ -130,6 +129,5 @@ router.get('/history', authenticateToken, (req, res) => {
     res.json(formatted);
   });
 });
-
 
 module.exports = router;
