@@ -109,9 +109,10 @@ router.post('/', authenticateToken, (req, res) => {
 router.get('/history', authenticateToken, (req, res) => {
   const query = `
     SELECT deliveries.date, deliveries.dish_name, deliveries.qr_token,
-           users.firstname AS prenom, users.lastname AS nom
+           IFNULL(users.firstname, 'Utilisateur inconnu') AS prenom,
+           IFNULL(users.lastname, '') AS nom
     FROM deliveries
-    JOIN users ON deliveries.client_id = users.id
+    LEFT JOIN users ON deliveries.client_id = users.id
     ORDER BY deliveries.date DESC
   `;
 
@@ -125,7 +126,7 @@ router.get('/history', authenticateToken, (req, res) => {
       date: row.date,
       dish_name: row.dish_name,
       qr_token: row.qr_token,
-      client: `${row.prenom} ${row.nom}`
+      client: `${row.prenom} ${row.nom}`.trim()
     }));
 
     res.json(formatted);
