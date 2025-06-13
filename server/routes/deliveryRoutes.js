@@ -108,7 +108,8 @@ router.post('/', authenticateToken, (req, res) => {
 // Route : historique global des livraisons (QR codes générés)
 router.get('/history', authenticateToken, (req, res) => {
   const query = `
-    SELECT deliveries.date, deliveries.dish_name, users.firstname AS prenom, users.lastname AS nom
+    SELECT deliveries.date, deliveries.dish_name, deliveries.qr_token,
+           users.firstname AS prenom, users.lastname AS nom
     FROM deliveries
     JOIN users ON deliveries.client_id = users.id
     ORDER BY deliveries.date DESC
@@ -123,6 +124,7 @@ router.get('/history', authenticateToken, (req, res) => {
     const formatted = rows.map(row => ({
       date: row.date,
       dish_name: row.dish_name,
+      qr_token: row.qr_token,
       client: `${row.prenom} ${row.nom}`
     }));
 

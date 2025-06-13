@@ -224,14 +224,6 @@ function QRCodePage() {
         <Toast type={toast.type} message={toast.message} onClose={() => setToast(null)} />
       )}
 
-      {/* Bouton retour à l'accueil traiteur */}
-<button
-  onClick={() => navigate('/central-kitchen')}
-  className="mt-12 mb-8 bg-[#f85e00] hover:bg-[#d24a00] text-white font-semibold py-2 px-6 rounded-full shadow transition-transform hover:scale-105"
->
-  Retour à la cuisine centrale
-</button>
-
     </div>
   );
 }
