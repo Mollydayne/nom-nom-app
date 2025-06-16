@@ -1,61 +1,76 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db/database');
+const authenticateToken = require('../middleware/authenticateToken');
 
-// Route : ajouter une préférence
-router.post('/', (req, res) => {
-  const { user_id, item, type } = req.body;
+// ==============================
+// POST - Créer une nouvelle préférence
+// ==============================
+router.post('/', authenticateToken, (req, res) => {
+  const { dish_name, liked } = req.body;
+  const userEmail = req.user.email;
 
-  if (!user_id || !item || !type || !['liked', 'disliked'].includes(type)) {
-    return res.status(400).json({ message: "Champs invalides ou manquants" });
+  // Vérification des champs
+  if (!dish_name || liked === undefined) {
+    return res.status(400).json({ error: 'dish_name et liked sont requis' });
   }
 
-  db.run(
-    `INSERT INTO preference_items (user_id, item, type) VALUES (?, ?, ?)`,
-    [user_id, item, type],
-    function (err) {
-      if (err) return res.status(500).json({ message: "Erreur serveur", error: err.message });
-
-      res.status(201).json({ message: "Préférence ajoutée", id: this.lastID });
+  // On récupère le client connecté via son email
+  db.get(`SELECT id FROM clients WHERE email = ?`, [userEmail], (err, client) => {
+    if (err) {
+      console.error("Erreur SQL (client par email) :", err.message);
+      return res.status(500).json({ error: "Erreur serveur" });
     }
-  );
+
+    if (!client) {
+      return res.status(404).json({ error: "Client introuvable" });
+    }
+
+    // On ajoute la préférence en base
+    db.run(
+      `INSERT INTO preferences (client_id, dish_name, liked)
+       VALUES (?, ?, ?)`,
+      [client.id, dish_name, liked],
+      function (err) {
+        if (err) {
+          console.error("Erreur insertion préférence :", err.message);
+          return res.status(500).json({ error: "Erreur lors de la création" });
+        }
+
+        // On retourne l'ID de la préférence créée
+        res.status(201).json({ id: this.lastID, liked });
+      }
+    );
+  });
 });
 
-// Route : récupérer toutes les préférences d’un utilisateur
-router.get('/user/:userId', (req, res) => {
-  const userId = req.params.userId;
-
-  db.all(
-    `SELECT * FROM preference_items WHERE user_id = ?`,
-    [userId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ message: "Erreur serveur", error: err.message });
-
-      res.json(rows);
-    }
-  );
-});
-
-// Route : mettre à jour une préférence existante
-router.patch('/:id', (req, res) => {
+// ==============================
+// PATCH - Modifier une préférence existante
+// ==============================
+router.patch('/:id', authenticateToken, (req, res) => {
   const preferenceId = req.params.id;
-  const { type } = req.body;
+  const { liked } = req.body;
 
-  if (type !== 'liked' && type !== 'disliked' && type !== null) {
-    return res.status(400).json({ message: "Type must be 'liked', 'disliked' or null" });
+  // Vérification du champ liked
+  if (liked !== true && liked !== false) {
+    return res.status(400).json({ error: "Le champ 'liked' doit être true ou false" });
   }
 
+  // Mise à jour de la préférence
   db.run(
-    `UPDATE preference_items SET type = ? WHERE id = ?`,
-    [type, preferenceId],
+    `UPDATE preferences SET liked = ? WHERE id = ?`,
+    [liked, preferenceId],
     function (err) {
-      if (err) return res.status(500).json({ message: "Erreur serveur", error: err.message });
-
-      if (this.changes === 0) {
-        return res.status(404).json({ message: "Préférence non trouvée" });
+      if (err) {
+        console.error("Erreur mise à jour préférence :", err.message);
+        return res.status(500).json({ error: "Erreur serveur" });
       }
 
-      res.json({ message: "Préférence mise à jour", id: preferenceId, type });
+      if (this.changes === 0) {
+        return res.status(404).json({ error: "Préférence introuvable" });
+      }
+
+      res.json({ message: "Préférence mise à jour", id: preferenceId, liked });
     }
   );
 });

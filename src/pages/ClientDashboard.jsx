@@ -16,7 +16,6 @@ export default function ClientDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Remplacement de fetch direct par apiFetch
     apiFetch('/api/users/chefs')
       .then(data => setChefs(data))
       .catch(err => console.error('Erreur chargement traiteurs :', err));
@@ -25,7 +24,6 @@ export default function ClientDashboard() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    // Remplacement par apiFetch avec ajout des headers
     apiFetch('/api/clients/client-dashboard', {
       headers: { Authorization: `Bearer ${token}` },
     })
@@ -40,7 +38,6 @@ export default function ClientDashboard() {
     const token = localStorage.getItem("token");
 
     try {
-      // Utilisation de apiFetch avec POST
       const updatedClient = await apiFetch('/api/clients/select-chef', {
         method: 'POST',
         headers: {
@@ -56,23 +53,33 @@ export default function ClientDashboard() {
     }
   };
 
-  const handlePreferenceUpdate = async (preferenceId, likedValue) => {
+  // Met à jour une préférence existante ou en crée une nouvelle si besoin
+  const handlePreferenceUpdate = async (preferenceId, likedValue, dishName) => {
     const token = localStorage.getItem("token");
 
     try {
-      // Utilisation de apiFetch pour PATCH
-      const updatedPref = await apiFetch(`/api/preferences/${preferenceId}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ liked: likedValue }),
-      });
+      let updated;
+
+      if (preferenceId) {
+        updated = await apiFetch(`/api/preferences/${preferenceId}`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ liked: likedValue }),
+        });
+      } else {
+        updated = await apiFetch(`/api/preferences`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ dish_name: dishName, liked: likedValue }),
+        });
+      }
 
       setClientData((prev) => ({
         ...prev,
         preferences: prev.preferences.map((pref) =>
-          pref.id === preferenceId ? { ...pref, liked: updatedPref.liked } : pref
+          pref.dish_name === dishName
+            ? { ...pref, liked: updated.liked, preference_id: updated.id ?? preferenceId }
+            : pref
         ),
       }));
     } catch (err) {
@@ -92,7 +99,6 @@ export default function ClientDashboard() {
     const token = localStorage.getItem('token');
 
     try {
-      // Suppression de compte avec apiFetch
       await apiFetch('/api/users/me', {
         method: 'DELETE',
         headers: {
@@ -179,16 +185,16 @@ export default function ClientDashboard() {
         <h2 className="text-2xl mb-4 font-bold text-center">Tes plats</h2>
         <ul className="space-y-4">
           {preferences.length === 0 && (
-            <li className="text-center text-sm text-gray-500">Tu n’as pas encore noté de plats.</li>
+            <li className="text-center text-sm text-gray-500">Tu n’as pas encore reçu de plats.</li>
           )}
           {preferences.map((pref) => (
-            <li key={pref.id} className="flex justify-between items-center border-b pb-2">
+            <li key={pref.dish_name} className="flex justify-between items-center border-b pb-2">
               <span>{pref.dish_name}</span>
               <div className="flex space-x-4">
-                <button onClick={() => handlePreferenceUpdate(pref.id, true)}>
+                <button onClick={() => handlePreferenceUpdate(pref.preference_id, true, pref.dish_name)}>
                   <img src={pref.liked === true ? "/star_filled.png" : "/star_empty.png"} alt="Plat apprécié" className="w-6 h-6 hover:scale-110 transition" />
                 </button>
-                <button onClick={() => handlePreferenceUpdate(pref.id, false)}>
+                <button onClick={() => handlePreferenceUpdate(pref.preference_id, false, pref.dish_name)}>
                   <img src={pref.liked === false ? "/sad_filled.png" : "/sad_empty.png"} alt="Plat non apprécié" className="w-6 h-6 hover:scale-110 transition" />
                 </button>
               </div>

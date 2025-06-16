@@ -41,8 +41,19 @@ router.get('/client-dashboard', authenticateToken, (req, res) => {
 
       // Étape 3 : on récupère les préférences liées aux plats livrés
       db.all(
-        `SELECT id, dish_name, liked FROM preferences WHERE client_id = ?`,
-        [clientId],
+  `
+  SELECT
+    d.dish_name,
+    p.id AS preference_id,
+    p.liked
+  FROM deliveries d
+  LEFT JOIN preferences p
+    ON d.client_id = p.client_id AND d.dish_name = p.dish_name
+  WHERE d.client_id = ?
+  GROUP BY d.dish_name
+  `,
+  [clientId],
+
         (err, preferences) => {
           if (err) {
             console.error("Erreur SQL (préférences) :", err.message);
