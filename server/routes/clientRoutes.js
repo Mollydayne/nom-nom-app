@@ -8,43 +8,50 @@ const nodemailer = require('nodemailer'); // ajout requis pour envoyer des email
 // GET - Dashboard client avec prénom + préférences
 // =======================
 router.get('/client-dashboard', authenticateToken, (req, res) => {
-  const userId = req.user.id;
+  const userEmail = req.user.email;
 
-  const dashboardQuery = `
-    SELECT
-      COUNT(*) AS total_delivered,
-      SUM(CASE WHEN returned = 0 THEN 1 ELSE 0 END) AS pending_returns,
-      SUM(CASE WHEN paid = 0 THEN price ELSE 0 END) AS unpaid_amount
-    FROM deliveries
-    WHERE client_id = ?
-  `;
-
-  db.get(dashboardQuery, [userId], (err, row) => {
+  // Étape 1 : on récupère la fiche client correspondant à l'utilisateur connecté
+  db.get(`SELECT id, firstName FROM clients WHERE email = ?`, [userEmail], (err, clientRow) => {
     if (err) {
-      console.error("Erreur SQL (dashboard) :", err.message);
+      console.error("Erreur SQL (recherche client) :", err.message);
       return res.status(500).json({ error: err.message });
     }
 
-    // On récupère le prénom de l'utilisateur
-    db.get(`SELECT firstname FROM users WHERE id = ?`, [userId], (err, userRow) => {
+    if (!clientRow) {
+      return res.status(404).json({ error: "Fiche client introuvable pour cet utilisateur" });
+    }
+
+    const clientId = clientRow.id;
+
+    // Étape 2 : on récupère les statistiques du dashboard
+    const dashboardQuery = `
+      SELECT
+        COUNT(*) AS total_delivered,
+        SUM(CASE WHEN returned = 0 THEN 1 ELSE 0 END) AS pending_returns,
+        SUM(CASE WHEN paid = 0 THEN price ELSE 0 END) AS unpaid_amount
+      FROM deliveries
+      WHERE client_id = ?
+    `;
+
+    db.get(dashboardQuery, [clientId], (err, row) => {
       if (err) {
-        console.error("Erreur SQL (prénom user) :", err.message);
+        console.error("Erreur SQL (dashboard) :", err.message);
         return res.status(500).json({ error: err.message });
       }
 
-      // On récupère les plats associés au client avec leur statut "liked"
+      // Étape 3 : on récupère les préférences liées aux plats livrés
       db.all(
         `SELECT id, dish_name, liked FROM preferences WHERE client_id = ?`,
-        [userId],
+        [clientId],
         (err, preferences) => {
           if (err) {
             console.error("Erreur SQL (préférences) :", err.message);
             return res.status(500).json({ error: err.message });
           }
 
-          // On retourne les données du dashboard client
+          // Étape 4 : on renvoie toutes les données nécessaires au frontend
           res.json({
-            firstName: userRow?.firstname || null,
+            firstName: clientRow.firstName,
             preferences: preferences || [],
             ...row
           });
