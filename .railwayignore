@@ -1,0 +1,7 @@
+# Ignore toutes les bases SQLite locales
+*.sqlite
+
+# Ignore les backups éventuels
+*.sqlite-journal
+*.db
+*.db-journal
