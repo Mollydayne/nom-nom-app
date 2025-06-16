@@ -25,33 +25,35 @@ router.get('/client-dashboard', authenticateToken, (req, res) => {
       return res.status(500).json({ error: err.message });
     }
 
-    // On récupère le prénom
-   db.get(`SELECT firstname FROM users WHERE id = ?`, [userId], (err, userRow) => {
-  if (err) {
-    console.error("Erreur SQL (prénom user) :", err.message);
-    return res.status(500).json({ error: err.message });
-  }
-
-  db.all(
-    `SELECT id, item, type FROM preference_items WHERE user_id = ?`,
-    [userId],
-    (err, preferences) => {
+    // On récupère le prénom de l'utilisateur
+    db.get(`SELECT firstname FROM users WHERE id = ?`, [userId], (err, userRow) => {
       if (err) {
-        console.error("Erreur SQL (préférences) :", err.message);
+        console.error("Erreur SQL (prénom user) :", err.message);
         return res.status(500).json({ error: err.message });
       }
 
-      res.json({
-        firstName: userRow?.firstname || null,
-        preferences: preferences || [],
-        ...row
-      });
-    }
-  );
-});
+      // On récupère les plats associés au client avec leur statut "liked"
+      db.all(
+        `SELECT id, dish_name, liked FROM preferences WHERE client_id = ?`,
+        [userId],
+        (err, preferences) => {
+          if (err) {
+            console.error("Erreur SQL (préférences) :", err.message);
+            return res.status(500).json({ error: err.message });
+          }
 
+          // On retourne les données du dashboard client
+          res.json({
+            firstName: userRow?.firstname || null,
+            preferences: preferences || [],
+            ...row
+          });
+        }
+      );
+    });
   });
 });
+
 
 // =======================
 // Connexion fiche client
