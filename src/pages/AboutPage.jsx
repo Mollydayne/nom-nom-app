@@ -2,6 +2,9 @@ import { Link } from 'react-router-dom';
 import BentoDecoration from '../components/BentoDecoration';
 import TopRightCircle from '../components/TopRightCircle';
 
+// Making a comment to force a push
+
+
 function AboutPage() {
   return (
     <div className="min-h-screen bg-[#ffb563] text-[#5a3a00] font-zenloop px-6 py-16 relative">
