@@ -41,3 +41,4 @@ Thumbs.db
 # Ignorer les bases locales
 *.sqlite
 *.sqlite3
+server/database.sqlite
