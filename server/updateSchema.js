@@ -1,9 +1,10 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const db = new sqlite3.Database(path.join(__dirname, 'db/database.sqlite'));
 
-// Forcer la création des tables (copié depuis database.js)
+const db = new sqlite3.Database(path.join(__dirname, 'database.sqlite'));
+
+// Forcer la création de la table users si elle n'existe pas (sécurisation minimale)
 db.serialize(() => {
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
@@ -39,12 +40,35 @@ const addColumnIfNotExists = (table, column, type) => {
   });
 };
 
+// Fonction pour créer la table preferences si elle n'existe pas
+const createPreferencesTableIfNotExists = () => {
+  return new Promise((resolve, reject) => {
+    db.run(`
+      CREATE TABLE IF NOT EXISTS preferences (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL,
+        dish_name TEXT NOT NULL,
+        liked INTEGER,
+        FOREIGN KEY (client_id) REFERENCES clients(id)
+      )
+    `, (err) => {
+      if (err) {
+        console.error('Erreur création table preferences :', err.message);
+        return reject(err);
+      }
+      console.log(' Table preferences vérifiée/créée');
+      resolve();
+    });
+  });
+};
+
 // Exécution
 const updateSchema = async () => {
   try {
     await addColumnIfNotExists('users', 'firstname', 'TEXT');
     await addColumnIfNotExists('users', 'lastname', 'TEXT');
     await addColumnIfNotExists('deliveries', 'dish_name', 'TEXT');
+    await createPreferencesTableIfNotExists();
 
     console.log('Mise à jour du schéma terminée !');
     db.close();

@@ -37,3 +37,7 @@ Thumbs.db
 # IDEs
 .idea/
 *.iml
+
+# Ignorer les bases locales
+*.sqlite
+*.sqlite3

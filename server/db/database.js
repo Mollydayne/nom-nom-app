@@ -1,7 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-// Connexion à la base de données SQLite située dans le même dossier
+// Connexion à la base de données SQLite dans le dossier actuel
 const db = new sqlite3.Database(path.join(__dirname, 'database.sqlite'));
 
 // Création automatique des tables à l'ouverture de l'application
@@ -15,11 +15,13 @@ db.serialize(() => {
       password TEXT NOT NULL,
       role TEXT DEFAULT 'client',
       reset_token TEXT,
-      reset_expires INTEGER
+      reset_expires INTEGER,
+      firstname TEXT,
+      lastname TEXT
     )
   `);
 
-  // Table des clients (informations personnalisées)
+  // Table des clients
   db.run(`
     CREATE TABLE IF NOT EXISTS clients (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,12 +30,12 @@ db.serialize(() => {
       email TEXT,
       allergies TEXT,
       likes TEXT,
-      chef_id INTEGER,                      
-      FOREIGN KEY (chef_id) REFERENCES users(id)  
+      chef_id INTEGER,
+      FOREIGN KEY (chef_id) REFERENCES users(id)
     )
   `);
 
-  // Table des livraisons de gamelles
+  // Table des livraisons
   db.run(`
     CREATE TABLE IF NOT EXISTS deliveries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,18 +48,30 @@ db.serialize(() => {
       price REAL,
       qr_token TEXT,
       box_id INTEGER,
-      FOREIGN KEY (client_id) REFERENCES users(id),
+      dish_name TEXT,
+      FOREIGN KEY (client_id) REFERENCES clients(id),
       FOREIGN KEY (sender_id) REFERENCES users(id)
     )
   `);
 
-  // Table des préférences (aime / n’aime pas, plat par plat)
+  // Table des préférences simples liées aux livraisons
+  db.run(`
+    CREATE TABLE IF NOT EXISTS preferences (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER NOT NULL,
+      dish_name TEXT NOT NULL,
+      liked INTEGER,
+      FOREIGN KEY (client_id) REFERENCES clients(id)
+    )
+  `);
+
+  // Table des préférences générales utilisateur (non utilisées actuellement)
   db.run(`
     CREATE TABLE IF NOT EXISTS preference_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,         -- identifiant de l’utilisateur concerné
-      item TEXT NOT NULL,               -- nom du plat ou ingrédient
-      type TEXT CHECK(type IN ('liked', 'disliked')) NOT NULL, -- type de préférence
+      user_id INTEGER NOT NULL,
+      item TEXT NOT NULL,
+      type TEXT CHECK(type IN ('liked', 'disliked')) NOT NULL,
       FOREIGN KEY (user_id) REFERENCES users(id)
     )
   `);
