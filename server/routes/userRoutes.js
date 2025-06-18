@@ -16,7 +16,7 @@ router.post('/register', async (req, res) => {
 
   const normalizedEmail = email.toLowerCase();
 
-  // On vérifie si l'utilisateur existe déjà
+  // check si l'utilisateur existe déjà
   db.get(`SELECT * FROM users WHERE email = ?`, [normalizedEmail], async (err, existingUser) => {
     if (err) {
       console.error("Erreur vérification utilisateur :", err.message);
@@ -138,7 +138,7 @@ router.post('/login', (req, res) => {
     });
 
     res.json({
-      message: "Connexion réussie",
+      message: "Connexion réussie, bravo!",
       token,
       user: {
         id: user.id,

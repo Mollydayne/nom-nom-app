@@ -19,20 +19,20 @@ function SignupPage() {
     chefId: '',
   });
 
-  // Au chargement, on va chercher la liste des traiteurs
+  // au chargement go chercher la liste des traiteurs
   useEffect(() => {
     apiFetch('/api/users/chefs')
       .then(data => setChefs(data))
       .catch(err => console.error('Erreur chargement traiteurs :', err));
   }, []);
 
-  // Gestion des changements dans les champs du formulaire
+  // gestion des changements dans les champs du form
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   };
 
-  // Lors de la soumission du formulaire
+  // a la soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
