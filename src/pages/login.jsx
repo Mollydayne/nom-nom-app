@@ -9,7 +9,7 @@ import { apiFetch } from '../api'; //adapte le chemin si nécessaire
 function Login() {
   const [form, setForm] = useState({
     email: '',
-    password: '',
+    motDePasse: '',  //changement pour cohérence avec le back, prlbm login 18/06
   });
 
   const [error, setError] = useState('');
@@ -81,9 +81,9 @@ function Login() {
         />
         <input
           type="password"
-          name="password"
+          name="motDePasse" //changement pour cohérence avec le back, prlbm login 18/06
           placeholder="Mot de passe"
-          value={form.password}
+          value={form.motDePasse}
           onChange={handleChange}
           className="mb-6 px-6 py-2 rounded-full bg-[#ffe4b3] text-black text-center outline-none w-full focus:bg-[#ffeecd] hover:bg-[#ffeecd] transition"
         />
