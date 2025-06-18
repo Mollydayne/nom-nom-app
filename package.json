@@ -8,8 +8,7 @@
     "dev:server": "node server/index.js",
     "dev:client": "vite",
     "test": "jest",
-    "postinstall": "node server/updateSchema.js"
-
+    "postinstall": "if [ \"$VERCEL\" != \"1\" ]; then node server/updateSchema.js; fi"
 
   },
   "dependencies": {
