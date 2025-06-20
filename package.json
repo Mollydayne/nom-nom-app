@@ -9,14 +9,15 @@
     "dev:client": "vite",
     "test": "jest",
     "postinstall": "if [ \"$VERCEL\" != \"1\" ]; then node server/updateSchema.js; fi"
-
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.4",
+    "dotenv": "^16.5.0",
     "gsap": "^3.13.0",
     "html5-qrcode": "^2.3.8",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.3",
+    "pg": "^8.16.2",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

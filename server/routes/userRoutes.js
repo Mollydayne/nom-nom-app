@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const db = require('../db/database');
+const pool = require('../db'); // passage à PostgreSQL
 
 // ===============================
 // POST - Inscription
@@ -16,100 +16,77 @@ router.post('/register', async (req, res) => {
 
   const normalizedEmail = email.toLowerCase();
 
-  // check si l'utilisateur existe déjà
-  db.get(`SELECT * FROM users WHERE email = ?`, [normalizedEmail], async (err, existingUser) => {
-    if (err) {
-      console.error("Erreur vérification utilisateur :", err.message);
-      return res.status(500).json({ error: "Erreur serveur" });
-    }
+  try {
+    // Vérifie si un utilisateur existe déjà
+    const existingUser = await pool.query(
+      `SELECT * FROM users WHERE email = $1`,
+      [normalizedEmail]
+    );
 
-    if (existingUser) {
+    if (existingUser.rows.length > 0) {
       return res.status(409).json({ error: "Un compte existe déjà avec cet email" });
     }
 
-    // On hash le mot de passe
+    // Hash du mot de passe
     const hashedPassword = await bcrypt.hash(motDePasse, 10);
 
-    // Insertion dans la table users
-    db.run(
+    //  Insertion dans users avec RETURNING id
+    const insertUser = await pool.query(
       `INSERT INTO users (username, email, password, role, firstname, lastname)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [`${prenom} ${nom}`, normalizedEmail, hashedPassword, role, prenom, nom],
-      function (err) {
-        if (err) {
-          console.error("Erreur lors de l'inscription :", err.message);
-          return res.status(500).json({ error: "Erreur lors de l'inscription" });
-        }
-
-        const newUserId = this.lastID;
-
-        // Si l'utilisateur est un client, on crée sa fiche client correspondante
-        if (role === 'client') {
-          if (chefId) {
-            // Cas où le client est associé à un traiteur dès l'inscription
-            db.run(
-              `INSERT INTO clients (firstName, lastName, email, chef_id, user_id)
-               VALUES (?, ?, ?, ?, ?)`,
-              [prenom, nom, normalizedEmail, chefId, newUserId],
-              (err) => {
-                if (err) {
-                  console.error("Erreur création fiche client :", err.message);
-                } else {
-                  console.log("Fiche client créée et liée au traiteur.");
-                }
-              }
-            );
-          } else {
-            // Cas où aucune fiche client n'existe → on en crée une automatiquement
-            db.get(
-              `SELECT id FROM clients WHERE email = ? AND user_id IS NULL`,
-              [normalizedEmail],
-              (err, clientRow) => {
-                if (err) {
-                  console.error("Erreur recherche fiche client :", err.message);
-                } else if (clientRow) {
-                  // Si une fiche client existe mais sans user_id, on la lie
-                  db.run(
-                    `UPDATE clients SET user_id = ? WHERE id = ?`,
-                    [newUserId, clientRow.id],
-                    (err) => {
-                      if (err) {
-                        console.error("Erreur liaison user/client :", err.message);
-                      } else {
-                        console.log("Fiche client existante liée.");
-                      }
-                    }
-                  );
-                } else {
-                  // Sinon, on crée une nouvelle fiche client
-                  db.run(
-                    `INSERT INTO clients (firstName, lastName, email, user_id)
-                     VALUES (?, ?, ?, ?)`,
-                    [prenom, nom, normalizedEmail, newUserId],
-                    (err) => {
-                      if (err) {
-                        console.error("Erreur création fiche client automatique :", err.message);
-                      } else {
-                        console.log("Fiche client créée automatiquement à l'inscription.");
-                      }
-                    }
-                  );
-                }
-              }
-            );
-          }
-        }
-
-        return res.status(201).json({ message: "Inscription réussie", userId: newUserId });
-      }
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+      [`${prenom} ${nom}`, normalizedEmail, hashedPassword, role, prenom, nom]
     );
-  });
+
+    const newUserId = insertUser.rows[0].id;
+
+    // Si c’est un client, on crée ou met à jour sa fiche client
+    if (role === 'client') {
+      if (chefId) {
+        // Cas 1 : client lié directement à un traiteur
+        await pool.query(
+          `INSERT INTO clients (firstName, lastName, email, chef_id, user_id)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [prenom, nom, normalizedEmail, chefId, newUserId]
+        );
+        console.log("Fiche client créée et liée au traiteur.");
+      } else {
+        // Cas 2 : client seul → cherche s’il existe déjà une fiche
+        const clientRow = await pool.query(
+          `SELECT id FROM clients WHERE email = $1 AND user_id IS NULL`,
+          [normalizedEmail]
+        );
+
+        if (clientRow.rows.length > 0) {
+          // Mise à jour de fiche existante
+          await pool.query(
+            `UPDATE clients SET user_id = $1 WHERE id = $2`,
+            [newUserId, clientRow.rows[0].id]
+          );
+          console.log("Fiche client existante liée.");
+        } else {
+          // Création automatique d’une nouvelle fiche
+          await pool.query(
+            `INSERT INTO clients (firstName, lastName, email, user_id)
+             VALUES ($1, $2, $3, $4)`,
+            [prenom, nom, normalizedEmail, newUserId]
+          );
+          console.log("Fiche client créée automatiquement à l'inscription.");
+        }
+      }
+    }
+
+    return res.status(201).json({ message: "Inscription réussie", userId: newUserId });
+
+  } catch (err) {
+    console.error("Erreur lors de l'inscription :", err.message);
+    return res.status(500).json({ error: "Erreur lors de l'inscription" });
+  }
 });
 
 // ===============================
 // POST - Connexion
 // ===============================
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, motDePasse } = req.body;
 
   if (!email || !motDePasse) {
@@ -118,24 +95,31 @@ router.post('/login', (req, res) => {
 
   const normalizedEmail = email.toLowerCase();
 
-  db.get(`SELECT * FROM users WHERE email = ?`, [normalizedEmail], async (err, user) => {
-    if (err) {
-      console.error("Erreur recherche utilisateur :", err.message);
-      return res.status(500).json({ error: "Erreur serveur" });
-    }
+  try {
+    // Récupération utilisateur
+    const userRes = await pool.query(
+      `SELECT * FROM users WHERE email = $1`,
+      [normalizedEmail]
+    );
 
-    if (!user) {
+    if (userRes.rows.length === 0) {
       return res.status(401).json({ error: "Aucun compte trouvé avec cet email" });
     }
 
+    const user = userRes.rows[0];
+
+    // Vérifie le mot de passe
     const validPassword = await bcrypt.compare(motDePasse, user.password);
     if (!validPassword) {
       return res.status(401).json({ error: "Mot de passe incorrect" });
     }
 
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: '7d',
-    });
+    // Génère le token JWT
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
     res.json({
       message: "Connexion réussie, bravo!",
@@ -148,7 +132,11 @@ router.post('/login', (req, res) => {
         lastname: user.lastname,
       },
     });
-  });
+
+  } catch (err) {
+    console.error("Erreur recherche utilisateur :", err.message);
+    return res.status(500).json({ error: "Erreur serveur" });
+  }
 });
 
 module.exports = router;

@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db/database');
+const pool = require('../db'); // PostgreSQL maintenant
 const authenticateToken = require('../middleware/authenticateToken');
 
 // ==============================
 // POST - Créer une nouvelle préférence
 // ==============================
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
   const { dish_name, liked } = req.body;
   const userEmail = req.user.email;
 
@@ -15,39 +15,39 @@ router.post('/', authenticateToken, (req, res) => {
     return res.status(400).json({ error: 'dish_name et liked sont requis' });
   }
 
-  // On récupère le client connecté via son email
-  db.get(`SELECT id FROM clients WHERE email = ?`, [userEmail], (err, client) => {
-    if (err) {
-      console.error("Erreur SQL (client par email) :", err.message);
-      return res.status(500).json({ error: "Erreur serveur" });
-    }
+  try {
+    // Récupère le client connecté via son email
+    const clientRes = await pool.query(
+      `SELECT id FROM clients WHERE email = $1`,
+      [userEmail]
+    );
 
-    if (!client) {
+    if (clientRes.rows.length === 0) {
       return res.status(404).json({ error: "Client introuvable" });
     }
 
-    // On ajoute la préférence en base
-    db.run(
-      `INSERT INTO preferences (client_id, dish_name, liked)
-       VALUES (?, ?, ?)`,
-      [client.id, dish_name, liked],
-      function (err) {
-        if (err) {
-          console.error("Erreur insertion préférence :", err.message);
-          return res.status(500).json({ error: "Erreur lors de la création" });
-        }
+    const clientId = clientRes.rows[0].id;
 
-        // On retourne l'ID de la préférence créée
-        res.status(201).json({ id: this.lastID, liked });
-      }
+    // Insertion de la préférence
+    const insertRes = await pool.query(
+      `INSERT INTO preferences (client_id, dish_name, liked)
+       VALUES ($1, $2, $3)
+       RETURNING id`,
+      [clientId, dish_name, liked]
     );
-  });
+
+    res.status(201).json({ id: insertRes.rows[0].id, liked });
+
+  } catch (err) {
+    console.error("Erreur insertion préférence :", err.message);
+    res.status(500).json({ error: "Erreur lors de la création" });
+  }
 });
 
 // ==============================
 // PATCH - Modifier une préférence existante
 // ==============================
-router.patch('/:id', authenticateToken, (req, res) => {
+router.patch('/:id', authenticateToken, async (req, res) => {
   const preferenceId = req.params.id;
   const { liked } = req.body;
 
@@ -56,23 +56,23 @@ router.patch('/:id', authenticateToken, (req, res) => {
     return res.status(400).json({ error: "Le champ 'liked' doit être true ou false" });
   }
 
-  // Mise à jour de la préférence
-  db.run(
-    `UPDATE preferences SET liked = ? WHERE id = ?`,
-    [liked, preferenceId],
-    function (err) {
-      if (err) {
-        console.error("Erreur mise à jour préférence :", err.message);
-        return res.status(500).json({ error: "Erreur serveur" });
-      }
+  try {
+    // Mise à jour de la préférence
+    const updateRes = await pool.query(
+      `UPDATE preferences SET liked = $1 WHERE id = $2`,
+      [liked, preferenceId]
+    );
 
-      if (this.changes === 0) {
-        return res.status(404).json({ error: "Préférence introuvable" });
-      }
-
-      res.json({ message: "Préférence mise à jour", id: preferenceId, liked });
+    if (updateRes.rowCount === 0) {
+      return res.status(404).json({ error: "Préférence introuvable" });
     }
-  );
+
+    res.json({ message: "Préférence mise à jour", id: preferenceId, liked });
+
+  } catch (err) {
+    console.error("Erreur mise à jour préférence :", err.message);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
 });
 
 module.exports = router;
