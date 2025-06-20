@@ -1,5 +1,5 @@
-require('dotenv').config(); // charge .env d'abord
-require('./initDb');        // ensuite seulement, appelle db.js
+require('./initDb'); // crée les tables si besoin
+
 
 
 const express = require('express');
