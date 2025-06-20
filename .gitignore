@@ -44,3 +44,5 @@ Thumbs.db
 server/database.sqlite
 database.sqlite
 server/db/database.sqlite
+
+/server/.env.local
