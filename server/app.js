@@ -1,5 +1,3 @@
-// server/app.js
-
 require('dotenv').config({ path: __dirname + '/.env' });
 
 const express = require('express');
@@ -7,47 +5,60 @@ const cors = require('cors');
 
 const app = express();
 
-// Configuration CORS pour autoriser l'accès depuis le frontend local et le site en prod
+// =====================
+// Configuration CORS
+// =====================
+// autorise les accès depuis le front local et le site en prod
+// Version dynamique obligatoire quand on utilise credentials: true, changé suite à passage postgre
 const allowedOrigins = [
   'http://localhost:5173',           // pour le dev local (Vite)
-  'http://localhost:3000',        // pour le dev éventuel en React classique
-  'https://www.nom-nom.app',            
-  'https://nom-nom.app'          // site frontend déployé. màj : j'enlève www pour tenter de régler mon prblm de fetch
+  'http://localhost:3000',           // pour le dev React classique
+  'https://www.nom-nom.app',         // site frontend déployé avec www
+  'https://nom-nom.app'              // site frontend sans www
 ];
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
+// =====================
 // Middleware JSON
+// =====================
 app.use(express.json());
 
-// Route de base (accès à la racine de l'API)
+// =====================
+// Routes de base (test / racine)
+// =====================
 app.get('/', (req, res) => {
   res.send('Bonjour patate');
 });
 
-// Route de test ping
 app.get('/api/ping', (req, res) => {
   res.json({ message: 'Pong depuis le backend' });
 });
 
-// Routes de l'application
+// =====================
+//  Routes de l'application
+// =====================
 const userRoutes = require('./routes/userRoutes');
 const clientRoutes = require('./routes/clientRoutes');
 const deliveryRoutes = require('./routes/deliveryRoutes');
 const preferenceRoutes = require('./routes/preferenceRoutes');
+const boxRoutes = require('./routes/boxRoutes');
 const qrRoutes = require('./routes/qrRoutes');
 
 app.use('/api/users', userRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/deliveries', deliveryRoutes);
 app.use('/api/preferences', preferenceRoutes);
-app.use('/api/qr', qrRoutes);
+app.use('/api/boxes', boxRoutes);
+app.use('/api/qrcodes', qrRoutes);
 
-// Exposer le dossier contenant les QR codes générés
-app.use('/qrcodes', express.static(__dirname + '/qrcodes'));
-
-// Export uniquement l'app pour pouvoir le lancer dans index.js ou le tester
 module.exports = app;
