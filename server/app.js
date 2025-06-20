@@ -15,6 +15,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',           // pour le dev local (Vite)
   'http://localhost:3000',           // pour le dev React classique
+  'http://127.0.0.1:5173',  // ← ajout important pour dev local
   'https://www.nom-nom.app',         // site frontend déployé avec www
   'https://nom-nom.app'              // site frontend sans www
 ];
