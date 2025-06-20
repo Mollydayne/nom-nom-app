@@ -1,5 +1,6 @@
-require('./initDb'); // TEMPORAIRE : crée les tables au démarrage
-require('dotenv').config({ path: __dirname + '/.env' });
+require('dotenv').config(); // charge .env d'abord
+require('./initDb');        // ensuite seulement, appelle db.js
+
 
 const express = require('express');
 const cors = require('cors');
