@@ -1,3 +1,4 @@
+require('./initDb'); // TEMPORAIRE : crée les tables au démarrage
 require('dotenv').config({ path: __dirname + '/.env' });
 
 const express = require('express');
