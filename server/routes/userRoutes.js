@@ -74,17 +74,19 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Mot de passe incorrect.' });
     }
 
+    // 23/06 inclut maintenant l'email dans le token JWT
     const token = jwt.sign(
       {
         id: user.rows[0].id,
         role: user.rows[0].role,
-        username: user.rows[0].username
+        username: user.rows[0].username,
+        email: user.rows[0].email
       },
       process.env.JWT_SECRET,
       { expiresIn: '3h' }
     );
 
-    // Envoi du token + infos utilisateur au frontend
+    // renvoie l'utilisateur complet au frontend
     res.status(200).json({
       token,
       user: {
@@ -99,7 +101,6 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Erreur serveur lors de la connexion.' });
   }
 });
-
 
 // ============================================
 // GET - Liste des traiteurs (chefs) pour le signup
