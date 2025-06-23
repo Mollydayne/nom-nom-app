@@ -11,9 +11,9 @@ router.get('/client-dashboard', authenticateToken, async (req, res) => {
   const userEmail = req.user.email;
 
   try {
-    // Étape 1 : récupération de la fiche client (avec pg)
+    // Étape 1 : récupération de la fiche client (attention à la casse sur firstname)
     const clientRes = await pool.query(
-      `SELECT id, firstName FROM clients WHERE email = $1`,
+      `SELECT id, firstname FROM clients WHERE email = $1`,
       [userEmail]
     );
 
@@ -55,7 +55,7 @@ router.get('/client-dashboard', authenticateToken, async (req, res) => {
 
     // Étape 4 : réponse globale
     res.json({
-      firstName: client.firstName,
+      firstName: client.firstname,
       preferences: preferencesRes.rows || [],
       ...dashboardRes.rows[0]
     });
