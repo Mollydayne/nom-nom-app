@@ -110,6 +110,8 @@ function ClientProfile() {
             </button>
           </div>
         </div>
+
+        
       )}
 
       {finalToast === 'deleted' && (
@@ -130,6 +132,8 @@ function ClientProfile() {
           onClose={() => setFinalToast(null)}
           position="center"
         />
+
+        
       )}
     </div>
   );

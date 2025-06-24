@@ -5,11 +5,16 @@ import BentoDecoration from '../components/BentoDecoration';
 import ReturnToKitchen from '../components/ReturnToKitchen';
 import { apiFetch } from '../api';
 import Toast from '../components/Toast';
+import ReturnModal from '../components/ReturnModal';
 
 function QRScanPage() {
   const [scanResult, setScanResult] = useState(null);
   const [message, setMessage] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+
+  // Préparation du son de confirmation
+  const audio = new Audio('/scan-success.wave');
 
   useEffect(() => {
     const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 }, false);
@@ -19,7 +24,14 @@ function QRScanPage() {
         scanner.clear().then(() => {
           const token = decodedText.split('/').pop();
           apiFetch(`/qr/${token}`)
-            .then(data => setScanResult({ ...data, token }))
+            .then(data => {
+              const fullData = { ...data, token };
+              audio.play().catch(() => {}); // joue le son de succès
+              setScanResult(fullData);
+              if (!data.returned) {
+                setShowModal(true);
+              }
+            })
             .catch(() => setScanResult({ error: 'QR non reconnu ou erreur serveur.' }));
         });
       },
@@ -29,13 +41,31 @@ function QRScanPage() {
     return () => scanner.clear().catch(() => {});
   }, []);
 
-  const handleReturn = () => {
+  const handleReturnOnly = () => {
     apiFetch(`/qr/${scanResult.token}/return`, { method: 'PATCH' })
       .then(() => {
-        setMessage('La boîte a été marquée comme retournée.');
+        setMessage('Boîte marquée comme retournée.');
         setScanResult({ ...scanResult, returned: true });
+        setShowModal(false);
       })
-      .catch(() => setMessage("Erreur lors de la mise à jour du statut de retour."));
+      .catch(() => {
+        setMessage("Erreur lors du retour.");
+        setShowModal(false);
+      });
+  };
+
+  const handleReturnAndPay = () => {
+    apiFetch(`/qr/${scanResult.token}/return`, { method: 'PATCH' })
+      .then(() => apiFetch(`/qr/${scanResult.token}/pay`, { method: 'PATCH' }))
+      .then(() => {
+        setMessage('Boîte marquée comme retournée et payée.');
+        setScanResult({ ...scanResult, returned: true, paid: true });
+        setShowModal(false);
+      })
+      .catch(() => {
+        setMessage("Erreur lors du retour et paiement.");
+        setShowModal(false);
+      });
   };
 
   return (
@@ -61,16 +91,19 @@ function QRScanPage() {
               {scanResult.returned ? (
                 <p className="text-[#918450] text-sm italic">Boîte déjà marquée comme retournée</p>
               ) : (
-                <button
-                  onClick={handleReturn}
-                  className="mt-2 bg-[#f85e00] text-white px-6 py-2 rounded-full hover:bg-[#d24a00] transition"
-                >
-                  Marquer comme retournée
-                </button>
+                <p className="text-[#918450] text-sm italic">En attente d’action...</p>
               )}
             </>
           )}
         </div>
+      )}
+
+      {showModal && (
+        <ReturnModal
+          onReturnOnly={handleReturnOnly}
+          onReturnAndPay={handleReturnAndPay}
+          onClose={() => setShowModal(false)}
+        />
       )}
 
       {message && (
@@ -81,8 +114,6 @@ function QRScanPage() {
           onClose={() => setMessage(null)}
         />
       )}
-
-      
     </div>
   );
 }

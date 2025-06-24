@@ -66,6 +66,34 @@ router.patch('/:token/return', async (req, res) => {
 });
 
 // ==============================
+// Route : marquer une livraison comme payée
+// ==============================
+router.patch('/:token/pay', async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    const result = await pool.query(
+      `UPDATE deliveries
+       SET paid = true
+       WHERE qr_token = $1
+       RETURNING id`,
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'QR code introuvable pour mise à jour paiement' });
+    }
+
+    return res.json({ message: 'Paiement enregistré avec succès' });
+
+  } catch (err) {
+    console.error('Erreur mise à jour paiement QR :', err.message);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ==============================
 // Route : historique des livraisons associées à un QR token 
 // ==============================
 router.get('/boxes/:qr_token/deliveries', async (req, res) => {

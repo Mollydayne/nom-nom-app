@@ -115,7 +115,7 @@ router.patch('/:id/resolve', authenticateToken, async (req, res) => {
   const { returned, paid } = req.body;
 
   try {
-    // ⚠️ On ne supprime plus les livraisons, même si retournées et payées
+    // On ne supprime plus les livraisons, même si retournées et payées
     // Cela permet de conserver l'historique complet côté client
     await pool.query(
       `UPDATE deliveries
