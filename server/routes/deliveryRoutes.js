@@ -72,21 +72,28 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
-// ================================
-// Route : historique des livraisons
-// ================================
+// =======================
+// GET - Historique des livraisons pour le traiteur
+// =======================
 router.get('/history', authenticateToken, async (req, res) => {
+  const chefId = req.user.id;
+
   try {
     const result = await pool.query(`
-      SELECT deliveries.date, deliveries.dish_name, deliveries.qr_token,
+      SELECT deliveries.id AS delivery_id,
+             deliveries.date,
+             deliveries.dish_name,
+             deliveries.qr_token,
              COALESCE(clients.firstname, 'Utilisateur inconnu') AS prenom,
              COALESCE(clients.lastname, '') AS nom
       FROM deliveries
       LEFT JOIN clients ON deliveries.client_id = clients.id
+      WHERE clients.chef_id = $1
       ORDER BY deliveries.date DESC
-    `);
+    `, [chefId]);
 
     const formatted = result.rows.map(row => ({
+      delivery_id: row.delivery_id,  
       date: row.date,
       dish_name: row.dish_name,
       qr_token: row.qr_token,
@@ -94,11 +101,42 @@ router.get('/history', authenticateToken, async (req, res) => {
     }));
 
     res.json(formatted);
-
   } catch (err) {
-    console.error('Erreur récupération historique :', err.message);
+    console.error('Erreur historique livraisons :', err.message);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
+
+
+// ================================
+// PATCH - Marquer une livraison comme revenue / payée
+// ================================
+router.patch('/:id/resolve', authenticateToken, async (req, res) => {
+  const deliveryId = req.params.id;
+  const { returned, paid } = req.body;
+
+  try {
+    // Si la boîte est revenue et payée → on supprime la livraison
+    if (returned === true && paid === true) {
+      await pool.query('DELETE FROM deliveries WHERE id = $1', [deliveryId]);
+      return res.json({ message: 'Livraison supprimée (retour + paiement confirmés)' });
+    }
+
+    // Sinon, on met à jour les champs
+    await pool.query(
+      `UPDATE deliveries
+       SET returned = $1, paid = $2
+       WHERE id = $3`,
+      [returned, paid, deliveryId]
+    );
+
+    res.json({ message: 'Statut de livraison mis à jour' });
+
+  } catch (err) {
+    console.error('Erreur PATCH /deliveries/:id/resolve :', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 
 module.exports = router;

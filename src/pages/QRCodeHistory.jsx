@@ -3,30 +3,51 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import BentoDecoration from '../components/BentoDecoration';
 import ReturnToKitchen from '../components/ReturnToKitchen';
+import Toast from '../components/Toast';
 
 export default function QRCodeHistory() {
   const [history, setHistory] = useState([]);
+  const [selectedId, setSelectedId] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
   // Récupération de l'historique des QR codes générés
-  useEffect(() => {
-    const token = localStorage.getItem('token');
+ useEffect(() => {
+  const token = localStorage.getItem('token');
 
-    apiFetch('/api/deliveries/history', {
-      headers: { Authorization: `Bearer ${token}` }
+  apiFetch('/api/deliveries/history', {
+    headers: { Authorization: `Bearer ${token}` }
+  })
+    .then(data => {
+      console.log('Premier élément reçu :', data[0]);
+      setHistory(data);
     })
-      .then(data => {
-        console.log('Historique QR reçu :', data);
-        setHistory(data);
-      })
-      .catch(err => {
-        console.error('Erreur historique QR codes :', err);
-      });
-  }, []);
+    .catch(err => console.error('Erreur historique QR codes :', err));
+}, []);
+
 
   // Redirection vers la page d’impression du QR code
   const handlePrint = (qr_token) => {
     navigate(`/qr-print/${qr_token}`);
+  };
+
+  // Gestion des retours
+  const handleResolve = async (delivery_id, returned, paid) => {
+    try {
+      const res = await apiFetch(`/api/deliveries/${delivery_id}/resolve`, {
+        method: 'PATCH',
+        body: JSON.stringify({ returned, paid }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      setToast(res.message || 'Mise à jour effectuée');
+      setHistory(prev => prev.filter(item => item.delivery_id !== delivery_id));
+      setShowPopup(false);
+    } catch (err) {
+      console.error('Erreur résolution livraison :', err);
+      setToast('Erreur lors de la mise à jour');
+    }
   };
 
   return (
@@ -40,23 +61,67 @@ export default function QRCodeHistory() {
         <p className="text-center text-sm text-gray-700">Aucune livraison enregistrée pour le moment.</p>
       ) : (
         <ul className="space-y-3 max-w-xl mx-auto">
-          {history.map((item, index) => (
-            <li key={index} className="bg-white rounded-xl p-4 shadow flex justify-between items-center">
+          {history.map((item) => (
+            <li key={item.qr_token} className="bg-white rounded-xl p-4 shadow flex justify-between items-center">
               <div>
                 <p className="font-bold">{item.dish_name}</p>
                 <p className="text-sm text-[#918450]">{item.date}</p>
                 <p className="text-sm">{item.client}</p>
               </div>
 
-              <button
-                onClick={() => handlePrint(item.qr_token)}
-                className="bg-[#f85e00] text-white px-3 py-1 rounded-full hover:bg-[#d24a00] text-sm transition"
-              >
-                Imprimer
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handlePrint(item.qr_token)}
+                  className="bg-[#f85e00] text-white px-3 py-1 rounded-full hover:bg-[#d24a00] text-sm transition"
+                >
+                  Imprimer
+                </button>
+
+                <button
+                  onClick={() => {
+                    setSelectedId(item.delivery_id);
+                    setShowPopup(true);
+                  }}
+                  className="bg-[#ffd29d] text-[#5a3a00] px-3 py-1 rounded-full text-sm hover:bg-[#ffcc85]"
+                >
+                  Livraison revenue
+                </button>
+              </div>
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Pop-up de choix */}
+      {showPopup && (
+        <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-red-700 text-white px-6 py-5 rounded-xl shadow-xl text-center w-[90%] max-w-md">
+          <p className="mb-3 text-lg font-medium">Que faire avec cette livraison ?</p>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={() => handleResolve(selectedId, true, true)}
+              className="bg-white text-red-700 px-4 py-2 rounded-full hover:bg-red-100 transition"
+            >
+              Reçue + Payée
+            </button>
+            <button
+              onClick={() => handleResolve(selectedId, true, false)}
+              className="bg-white text-red-700 px-4 py-2 rounded-full hover:bg-red-100 transition"
+            >
+              Seulement reçue
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <Toast
+          message={toast}
+          type="success"
+          duration={2000}
+          onClose={() => setToast(null)}
+          position="center"
+        />
       )}
     </div>
   );
