@@ -59,7 +59,7 @@ function ClientProfile() {
       <BentoDecoration />
 
       <h1 className="text-4xl text-[#891c1c] mb-6">
-        Profile: {client.firstName} {client.lastName}
+        Profile: {client.firstname} {client.lastname}
       </h1>
 
       <div className="bg-[#ffe4b3] rounded-xl p-6 w-full max-w-md shadow-lg space-y-4 text-lg">
@@ -114,7 +114,7 @@ function ClientProfile() {
 
       {finalToast === 'deleted' && (
         <Toast
-          message={`Profil de ${client.firstName} ${client.lastName} supprimé !`}
+          message={`Profil de ${client.firstname} ${client.lastname} supprimé !`}
           type="error"
           duration={2000}
           onClose={() => setFinalToast(null)}

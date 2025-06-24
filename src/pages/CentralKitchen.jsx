@@ -81,7 +81,8 @@ function CentralKitchen() {
 
       <h2 className="text-xl sm:text-2xl italic mb-10 text-[#5a3a00] text-center" tabIndex="0">
         Hello, <span className="font-bold text-[#891c1c]">
-          {user?.firstname ? user.firstname : 'Chef'}
+      {user?.username?.split(' ')[0] || 'Chef'}
+
         </span> — {cookingMessage}
       </h2>
 
@@ -97,7 +98,7 @@ function CentralKitchen() {
             <option value="">-- Name --</option>
             {Array.isArray(clients) && clients.map((client) => (
               <option key={client.id} value={client.id}>
-                {client.firstName} {client.lastName}
+              {client.firstname} {client.lastname}
               </option>
             ))}
           </select>

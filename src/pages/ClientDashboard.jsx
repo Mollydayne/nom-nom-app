@@ -151,11 +151,6 @@ export default function ClientDashboard() {
         </div>
       </div>
 
-      <button onClick={confirmDelete} className="fixed bottom-32 left-4 z-50 flex items-center space-x-2 bg-[#ffd29d] hover:bg-[#ffcc85] text-[#5a3a00] font-medium py-2 px-4 rounded-full shadow-lg transition-transform duration-200 ease-in-out hover:scale-105 hover:-translate-y-1 active:scale-95">
-        <img src="/trash.png" alt="Supprimer" className="w-6 h-6" />
-        <span>Supprimer mon compte</span>
-      </button>
-
       <button onClick={() => navigate('/client-settings')} className="fixed bottom-4 left-4 z-50 flex items-center space-x-2 bg-[#ffd29d] hover:bg-[#ffcc85] text-[#5a3a00] font-medium py-2 px-4 rounded-full shadow-lg transition-transform duration-200 ease-in-out hover:scale-105 hover:-translate-y-1 active:scale-95">
         <img src="/parameters.png" alt="Paramètres" className="w-6 h-6" />
         <span>Paramètres</span>
