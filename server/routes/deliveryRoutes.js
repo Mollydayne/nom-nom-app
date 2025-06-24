@@ -84,6 +84,8 @@ router.get('/history', authenticateToken, async (req, res) => {
              deliveries.date,
              deliveries.dish_name,
              deliveries.qr_token,
+             deliveries.returned,
+            deliveries.paid,
              COALESCE(clients.firstname, 'Utilisateur inconnu') AS prenom,
              COALESCE(clients.lastname, '') AS nom
       FROM deliveries

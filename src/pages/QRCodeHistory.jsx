@@ -12,43 +12,46 @@ export default function QRCodeHistory() {
   const [toast, setToast] = useState(null);
   const navigate = useNavigate();
 
-  // Récupération de l'historique des QR codes générés
- useEffect(() => {
-  const token = localStorage.getItem('token');
+  useEffect(() => {
+    const token = localStorage.getItem('token');
 
-  apiFetch('/api/deliveries/history', {
-    headers: { Authorization: `Bearer ${token}` }
-  })
-    .then(data => {
-      console.log('Premier élément reçu :', data[0]);
-      setHistory(data);
+    apiFetch('/api/deliveries/history', {
+      headers: { Authorization: `Bearer ${token}` }
     })
-    .catch(err => console.error('Erreur historique QR codes :', err));
-}, []);
+      .then(data => {
+        console.log('Premier élément reçu :', data[0]);
+        setHistory(data);
+      })
+      .catch(err => console.error('Erreur historique QR codes :', err));
+  }, []);
 
-
-  // Redirection vers la page d’impression du QR code
   const handlePrint = (qr_token) => {
     navigate(`/qr-print/${qr_token}`);
   };
 
-  // Gestion des retours
-  const handleResolve = async (delivery_id, returned, paid) => {
-    try {
-      const res = await apiFetch(`/api/deliveries/${delivery_id}/resolve`, {
-        method: 'PATCH',
-        body: JSON.stringify({ returned, paid }),
-        headers: { 'Content-Type': 'application/json' }
-      });
+const handleResolve = async (delivery_id, returned, paid) => {
+  try {
+    const res = await apiFetch(`/api/deliveries/${delivery_id}/resolve`, {
+      method: 'PATCH',
+      body: JSON.stringify({ returned, paid }),
+      headers: { 'Content-Type': 'application/json' }
+    });
 
-      setToast(res.message || 'Mise à jour effectuée');
-      setHistory(prev => prev.filter(item => item.delivery_id !== delivery_id));
-      setShowPopup(false);
-    } catch (err) {
-      console.error('Erreur résolution livraison :', err);
-      setToast('Erreur lors de la mise à jour');
-    }
-  };
+    setToast(res.message || 'Statut de livraison mis à jour');
+    setHistory(prev =>
+      prev.map(item =>
+        item.delivery_id === delivery_id
+          ? { ...item, returned, paid }
+          : item
+      )
+    );
+    setShowPopup(false);
+  } catch (err) {
+    console.error('Erreur résolution livraison :', err);
+    setToast('Erreur lors de la mise à jour');
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-[#ffb563] font-zenloop text-[#5a3a00] px-4 py-8">
@@ -82,9 +85,12 @@ export default function QRCodeHistory() {
                     setSelectedId(item.delivery_id);
                     setShowPopup(true);
                   }}
-                  className="bg-[#ffd29d] text-[#5a3a00] px-3 py-1 rounded-full text-sm hover:bg-[#ffcc85]"
+                  className={`px-3 py-1 rounded-full text-sm transition
+                    ${item.returned
+                      ? 'bg-green-600 text-white hover:bg-green-700'
+                      : 'bg-[#ffd29d] text-[#5a3a00] hover:bg-[#ffcc85]'}`}
                 >
-                  Livraison revenue
+                  {item.returned ? 'OK' : 'Livraison revenue'}
                 </button>
               </div>
             </li>
@@ -92,7 +98,6 @@ export default function QRCodeHistory() {
         </ul>
       )}
 
-      {/* Pop-up de choix */}
       {showPopup && (
         <div className="fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2 bg-red-700 text-white px-6 py-5 rounded-xl shadow-xl text-center w-[90%] max-w-md">
           <p className="mb-3 text-lg font-medium">Que faire avec cette livraison ?</p>
@@ -113,7 +118,6 @@ export default function QRCodeHistory() {
         </div>
       )}
 
-      {/* Toast */}
       {toast && (
         <Toast
           message={toast}
