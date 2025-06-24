@@ -88,27 +88,57 @@ router.get('/me', authenticateToken, async (req, res) => {
 });
 
 // =======================
-// GET - Un client par ID (vérifie chef_id)
+// GET - Un client par ID (vérifie chef_id + ajoute statistiques)
 // =======================
 router.get('/:id', authenticateToken, async (req, res) => {
   const clientId = req.params.id;
   const chefId = req.user.id;
 
   try {
-    const result = await pool.query(
-      `SELECT * FROM clients WHERE id = $1 AND chef_id = $2`,
+    // Vérifie que ce client appartient bien à ce traiteur
+    const clientResult = await pool.query(
+      `SELECT id, firstname, lastname, email, allergies, likes FROM clients
+       WHERE id = $1 AND chef_id = $2`,
       [clientId, chefId]
     );
 
-    if (result.rows.length === 0) {
+    if (clientResult.rows.length === 0) {
       return res.status(404).json({ error: 'Client not found or unauthorized' });
     }
 
-    res.json(result.rows[0]);
+    const client = clientResult.rows[0];
+
+    // Récupère le nombre de gamelles en attente de retour
+    const boxRes = await pool.query(
+      'SELECT COUNT(*) FROM deliveries WHERE client_id = $1 AND returned = false',
+      [clientId]
+    );
+
+    // Récupère le montant total non payé
+    const amountRes = await pool.query(
+      'SELECT COALESCE(SUM(price), 0) FROM deliveries WHERE client_id = $1 AND paid = false',
+      [clientId]
+    );
+
+    // Nombre total de livraisons
+    const totalRes = await pool.query(
+      'SELECT COUNT(*) FROM deliveries WHERE client_id = $1',
+      [clientId]
+    );
+
+    // Réponse enrichie
+    res.json({
+      ...client,
+      box_owed: parseInt(boxRes.rows[0].count, 10),
+      amount_due: parseFloat(amountRes.rows[0].coalesce),
+      total_deliveries: parseInt(totalRes.rows[0].count, 10),
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Erreur GET /clients/:id :', err.message);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
+
 
 // =======================
 // POST - Ajouter un client

@@ -3,53 +3,70 @@ const router = express.Router();
 const pool = require('../db'); // passage à PostgreSQL
 
 // ==============================
-// Route : traitement du scan d’un QR code
+// Route : récupération d’une livraison par QR token (sans modifier le retour)
 // ==============================
 router.get('/:token', async (req, res) => {
   const { token } = req.params;
 
   try {
-    // Recherche de la livraison associée au QR code
-    const deliveryRes = await pool.query(
-      'SELECT * FROM deliveries WHERE qr_token = $1',
+    const result = await pool.query(
+      `SELECT d.id, d.qr_token, d.returned, d.date, d.dish_name,
+              c.firstname, c.lastname
+       FROM deliveries d
+       LEFT JOIN clients c ON d.client_id = c.id
+       WHERE d.qr_token = $1`,
       [token]
     );
 
-    if (deliveryRes.rows.length === 0) {
-      return res.status(404).json({ message: 'QR code inconnu' });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'QR code inconnu' });
     }
 
-    const delivery = deliveryRes.rows[0];
+    const delivery = result.rows[0];
 
-    // Si la livraison n’a pas encore été marquée comme retournée
-    if (!delivery.returned) {
-      await pool.query(
-        'UPDATE deliveries SET returned = true WHERE id = $1',
-        [delivery.id]
-      );
-
-      return res.json({
-        message: 'Retour enregistré',
-        delivery_id: delivery.id,
-        client_id: delivery.client_id
-      });
-    } else {
-      //  Si déjà retourné
-      return res.json({
-        message: 'Les gamelles ont déjà été rendues',
-        delivery_id: delivery.id,
-        client_id: delivery.client_id
-      });
-    }
+    res.json({
+      delivery_id: delivery.id,
+      dish: delivery.dish_name,
+      date: delivery.date,
+      client: `${delivery.firstname || 'Utilisateur'} ${delivery.lastname || ''}`.trim(),
+      returned: delivery.returned
+    });
 
   } catch (err) {
     console.error('Erreur recherche QR :', err.message);
-    return res.status(500).json({ message: 'Erreur serveur' });
+    return res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
 // ==============================
-// Route : historique des livraisons associées à un QR token
+// Route : marquer un QR comme retourné
+// ==============================
+router.patch('/:token/return', async (req, res) => {
+  const { token } = req.params;
+
+  try {
+    const result = await pool.query(
+      `UPDATE deliveries
+       SET returned = true
+       WHERE qr_token = $1
+       RETURNING id`,
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'QR code introuvable pour mise à jour' });
+    }
+
+    return res.json({ message: 'Retour enregistré avec succès' });
+
+  } catch (err) {
+    console.error('Erreur retour QR :', err.message);
+    return res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ==============================
+// Route : historique des livraisons associées à un QR token 
 // ==============================
 router.get('/boxes/:qr_token/deliveries', async (req, res) => {
   const { qr_token } = req.params;

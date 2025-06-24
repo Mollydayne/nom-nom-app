@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import BentoDecoration from '../components/BentoDecoration';
 import ReturnToKitchen from '../components/ReturnToKitchen';
 import { apiFetch } from '../api';
+import Toast from '../components/Toast';
 
 function QRScanPage() {
   const [scanResult, setScanResult] = useState(null);
+  const [message, setMessage] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,7 +19,7 @@ function QRScanPage() {
         scanner.clear().then(() => {
           const token = decodedText.split('/').pop();
           apiFetch(`/qr/${token}`)
-            .then(data => setScanResult(data))
+            .then(data => setScanResult({ ...data, token }))
             .catch(() => setScanResult({ error: 'QR non reconnu ou erreur serveur.' }));
         });
       },
@@ -26,6 +28,15 @@ function QRScanPage() {
 
     return () => scanner.clear().catch(() => {});
   }, []);
+
+  const handleReturn = () => {
+    apiFetch(`/qr/${scanResult.token}/return`, { method: 'PATCH' })
+      .then(() => {
+        setMessage('La boîte a été marquée comme retournée.');
+        setScanResult({ ...scanResult, returned: true });
+      })
+      .catch(() => setMessage("Erreur lors de la mise à jour du statut de retour."));
+  };
 
   return (
     <div className="min-h-screen bg-[#ffb563] px-4 py-8 text-[#5a3a00] flex flex-col items-center font-zenloop">
@@ -42,11 +53,33 @@ function QRScanPage() {
             <p className="text-red-600">{scanResult.error}</p>
           ) : (
             <>
-              <p className="text-green-700 mb-2">QR scanné avec succès !</p>
-              <p className="text-sm">{scanResult.message}</p>
+              <p className="text-green-700 mb-2">QR reconnu</p>
+              <p className="text-lg font-medium mb-1">{scanResult.dish}</p>
+              <p className="text-sm mb-1">Client : {scanResult.client}</p>
+              <p className="text-sm mb-3">Date : {scanResult.date}</p>
+
+              {scanResult.returned ? (
+                <p className="text-[#918450] text-sm italic">Boîte déjà marquée comme retournée</p>
+              ) : (
+                <button
+                  onClick={handleReturn}
+                  className="mt-2 bg-[#f85e00] text-white px-6 py-2 rounded-full hover:bg-[#d24a00] transition"
+                >
+                  Marquer comme retournée
+                </button>
+              )}
             </>
           )}
         </div>
+      )}
+
+      {message && (
+        <Toast
+          type="success"
+          message={message}
+          duration={2000}
+          onClose={() => setMessage(null)}
+        />
       )}
 
       
