@@ -13,8 +13,7 @@ function QRScanPage() {
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
-  // Préparation du son de confirmation
-  const audio = new Audio('/scan-success.wave');
+  const audio = new Audio('/scan-success.wav'); // ✅ fichier renommé
 
   useEffect(() => {
     const scanner = new Html5QrcodeScanner('reader', { fps: 10, qrbox: 250 }, false);
@@ -23,10 +22,10 @@ function QRScanPage() {
       (decodedText) => {
         scanner.clear().then(() => {
           const token = decodedText.split('/').pop();
-          apiFetch(`/qr/${token}`)
+          apiFetch(`/api/qrcodes/${token}`) // ✅ route corrigée
             .then(data => {
               const fullData = { ...data, token };
-              audio.play().catch(() => {}); // joue le son de succès
+              audio.play().catch(() => {});
               setScanResult(fullData);
               if (!data.returned) {
                 setShowModal(true);
@@ -42,7 +41,7 @@ function QRScanPage() {
   }, []);
 
   const handleReturnOnly = () => {
-    apiFetch(`/qr/${scanResult.token}/return`, { method: 'PATCH' })
+    apiFetch(`/api/qrcodes/${scanResult.token}/return`, { method: 'PATCH' }) // ✅ route corrigée
       .then(() => {
         setMessage('Boîte marquée comme retournée.');
         setScanResult({ ...scanResult, returned: true });
@@ -55,8 +54,8 @@ function QRScanPage() {
   };
 
   const handleReturnAndPay = () => {
-    apiFetch(`/qr/${scanResult.token}/return`, { method: 'PATCH' })
-      .then(() => apiFetch(`/qr/${scanResult.token}/pay`, { method: 'PATCH' }))
+    apiFetch(`/api/qrcodes/${scanResult.token}/return`, { method: 'PATCH' }) // ✅ route corrigée
+      .then(() => apiFetch(`/api/qrcodes/${scanResult.token}/pay`, { method: 'PATCH' })) // ✅ route corrigée
       .then(() => {
         setMessage('Boîte marquée comme retournée et payée.');
         setScanResult({ ...scanResult, returned: true, paid: true });
