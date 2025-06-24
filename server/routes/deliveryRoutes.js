@@ -107,7 +107,6 @@ router.get('/history', authenticateToken, async (req, res) => {
   }
 });
 
-
 // ================================
 // PATCH - Marquer une livraison comme revenue / payée
 // ================================
@@ -116,13 +115,8 @@ router.patch('/:id/resolve', authenticateToken, async (req, res) => {
   const { returned, paid } = req.body;
 
   try {
-    // Si la boîte est revenue et payée → on supprime la livraison
-    if (returned === true && paid === true) {
-      await pool.query('DELETE FROM deliveries WHERE id = $1', [deliveryId]);
-      return res.json({ message: 'Livraison supprimée (retour + paiement confirmés)' });
-    }
-
-    // Sinon, on met à jour les champs
+    // ⚠️ On ne supprime plus les livraisons, même si retournées et payées
+    // Cela permet de conserver l'historique complet côté client
     await pool.query(
       `UPDATE deliveries
        SET returned = $1, paid = $2
@@ -137,6 +131,5 @@ router.patch('/:id/resolve', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
-
 
 module.exports = router;

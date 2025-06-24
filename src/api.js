@@ -27,8 +27,11 @@ export async function apiFetch(path, options = {}) {
     headers.Authorization = `Bearer ${token}`;
   }
 
-  // Si un body est présent, on le transforme en JSON
-  const body = options.body ? JSON.stringify(options.body) : undefined;
+  // Si un body est présent et que ce n’est pas une chaîne, on le transforme en JSON
+  let body = options.body;
+  if (body && typeof body !== 'string') {
+    body = JSON.stringify(body);
+  }
 
   // Requête vers l'API avec les options complètes
   const res = await fetch(`${API_URL}${path}`, {
