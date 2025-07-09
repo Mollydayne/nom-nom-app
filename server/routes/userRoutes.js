@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const pool = require('../db');
 const authenticateToken = require('../middleware/authenticateToken');
 const router = express.Router();
+const sendEmail = require('../utils/sendEmail');
+
 
 // ============================================
 // POST - Enregistrement d'un nouvel utilisateur
@@ -99,6 +101,50 @@ router.post('/login', async (req, res) => {
   } catch (error) {
     console.error('Erreur lors de la connexion :', error.message);
     res.status(500).json({ message: 'Erreur serveur lors de la connexion.' });
+  }
+});
+
+// ============================================
+// POST - Réinitialisation du mot de passe
+// ============================================
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ message: 'Email requis.' });
+  }
+
+  try {
+    // Vérifie si l'utilisateur existe
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Aucun compte trouvé avec cet email.' });
+    }
+
+    const user = result.rows[0];
+
+    // Génère un token
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    const resetLink = `https://www.nom-nom.app/reset-password?token=${token}`;
+
+    // Contenu de l’email
+    const emailHtml = `
+      <h2>Réinitialisation de votre mot de passe</h2>
+      <p>Bonjour ${user.firstname},</p>
+      <p>Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le lien ci-dessous :</p>
+      <p><a href="${resetLink}">${resetLink}</a></p>
+      <p>Ce lien est valable pendant 1 heure.</p>
+      <p>– L’équipe NomNom </p>
+    `;
+
+    await sendEmail(email, 'Réinitialisation de votre mot de passe', emailHtml);
+
+    res.status(200).json({ message: 'Un lien de réinitialisation a été envoyé à votre adresse email.' });
+
+  } catch (error) {
+    console.error('Erreur dans /forgot-password :', error.message);
+    res.status(500).json({ message: 'Erreur serveur.' });
   }
 });
 

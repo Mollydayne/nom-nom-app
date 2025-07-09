@@ -15,7 +15,7 @@ function ForgotPassword() {
 
     try {
       // On remplace l'appel fetch local par apiFetch
-      const res = await apiFetch('/users/forgot-password', {
+      const res = await apiFetch('/api/users/forgot-password', {
         method: 'POST',
         body: { email },
       });
